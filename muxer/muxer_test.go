@@ -10,8 +10,13 @@ import (
 func TestMux(t *testing.T) {
 	for _, tcase := range []TestCase{
 		TestCase{
-			name:            "oneInput",
+			name:            "oneInputOneChannel",
 			expectedOutputs: []int{666},
+			inputChannels:   1,
+		},
+		TestCase{
+			name:            "multipleInputsOneChannel",
+			expectedOutputs: []int{666, 777, 10, 0, 1},
 			inputChannels:   1,
 		},
 	} {

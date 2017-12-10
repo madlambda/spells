@@ -24,8 +24,11 @@ func Do(output interface{}, inputs ...interface{}) error {
 	inputVal := reflect.ValueOf(inputs[0])
 
 	go func() {
-		v, _ := inputVal.Recv()
-		outputVal.Send(v)
+		// TODO handle close
+		for {
+			v, _ := inputVal.Recv()
+			outputVal.Send(v)
+		}
 	}()
 
 	return nil
