@@ -59,11 +59,20 @@ func testMux(t *testing.T, tcase TestCase) {
 				inindex := i % len(inputs)
 				inputs[inindex] <- v
 			}
+
+			for _, input := range inputs {
+				close(input)
+			}
 		}()
 
 		for _, want := range tcase.expectedOutputs {
 			got := <-output
 			assert.EqualInts(t, want, got)
+		}
+
+		v, ok := <-output
+		if ok {
+			t.Fatalf("expected output to be closed, got val[%d]", v)
 		}
 	})
 }

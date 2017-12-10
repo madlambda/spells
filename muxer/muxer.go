@@ -26,7 +26,11 @@ func Do(output interface{}, inputs ...interface{}) error {
 	go func() {
 		// TODO handle close
 		for {
-			v, _ := inputVal.Recv()
+			v, ok := inputVal.Recv()
+			if !ok {
+				outputVal.Close()
+				return
+			}
 			outputVal.Send(v)
 		}
 	}()
