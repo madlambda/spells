@@ -31,7 +31,7 @@ func TestMux(t *testing.T) {
 		},
 		TestCase{
 			name:            "moreInputsThanSources",
-			expectedOutputs: []int{666, 777, 234},
+			expectedOutputs: []int{666, 777, 234, 1, 0},
 			sourceChannels:  2,
 		},
 	} {
@@ -55,6 +55,54 @@ func TestMuxClosedChannels(t *testing.T) {
 	}
 }
 
+func TestMuxDirectionedChannels(t *testing.T) {
+	sink := make(chan string)
+	source := make(chan string)
+
+	var sinkd chan<- string = sink
+	var sourced <-chan string = source
+
+	const expectedVal string = "lambda"
+
+	go func() {
+		source <- expectedVal
+		close(source)
+	}()
+
+	assert.NoError(t, muxer.Do(sinkd, sourced))
+
+	v, _ := <-sink
+	assert.EqualStrings(t, expectedVal, v)
+}
+
+func TestFailsOnWrongSourceDirection(t *testing.T) {
+	// the reflect package validates like this =(
+	//tt := (*chanType)(unsafe.Pointer(ch.typ))
+	//if ChanDir(tt.dir)&RecvDir == 0 {
+	//panic("reflect.Select: RecvDir case using send-only channel")
+	//}
+	t.Skip("no good way to verify direction =(")
+	sink := make(chan string)
+	source := make(chan string)
+
+	var sourced chan<- string = source
+	assert.Error(t, muxer.Do(sink, sourced))
+}
+
+func TestFailsOnWrongSinkDirection(t *testing.T) {
+	// the reflect package validates like this =(
+	//tt := (*chanType)(unsafe.Pointer(ch.typ))
+	//if ChanDir(tt.dir)&RecvDir == 0 {
+	//panic("reflect.Select: RecvDir case using send-only channel")
+	//}
+	t.Skip("no good way to verify direction =(")
+	sink := make(chan string)
+	source := make(chan string)
+
+	var sinkd <-chan string = sink
+	assert.Error(t, muxer.Do(sinkd, source))
+}
+
 func TestErrorOnInvalidSink(t *testing.T) {
 	for name, sink := range invalidCases() {
 		t.Run(name, func(t *testing.T) {
@@ -68,7 +116,9 @@ func TestErrorOnInvalidSource(t *testing.T) {
 	for name, source := range invalidCases() {
 		t.Run(name, func(t *testing.T) {
 			sink := make(chan int)
-			assert.Error(t, muxer.Do(sink, source))
+			validSource := make(chan int)
+			assert.Error(t, muxer.Do(sink, validSource, source))
+			assert.Error(t, muxer.Do(sink, source, validSource))
 		})
 	}
 }

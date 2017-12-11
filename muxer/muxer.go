@@ -75,6 +75,7 @@ func checkParams(sink interface{}, sources []interface{}) error {
 	}
 
 	sinktype := reflect.TypeOf(sink)
+	fmt.Printf("%#v\n", sinktype)
 	if sinktype.Kind() != reflect.Chan {
 		return fmt.Errorf("sink has invalid type[%s] kind[%s]", sinktype, sinktype.Kind())
 	}
