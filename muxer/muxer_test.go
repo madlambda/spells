@@ -10,21 +10,33 @@ import (
 func TestMux(t *testing.T) {
 	for _, tcase := range []TestCase{
 		TestCase{
-			name:            "oneInputOneChannel",
+			name:            "oneInputOneSource",
 			expectedOutputs: []int{666},
 			inputChannels:   1,
 		},
 		TestCase{
-			name:            "multipleInputsOneChannel",
+			name:            "multipleInputsOneSource",
 			expectedOutputs: []int{666, 777, 10, 0, 1},
 			inputChannels:   1,
+		},
+		TestCase{
+			name:            "sameInputsAsSources",
+			expectedOutputs: []int{666, 777, 10},
+			inputChannels:   3,
+		},
+		TestCase{
+			name:            "lessInputsThanSources",
+			expectedOutputs: []int{666, 777},
+			inputChannels:   3,
+		},
+		TestCase{
+			name:            "moreInputsThanSources",
+			expectedOutputs: []int{666, 777, 234},
+			inputChannels:   2,
 		},
 	} {
 		testMux(t, tcase)
 	}
-}
-
-func TestMultipleIntChannels(t *testing.T) {
 }
 
 func TestErrorOnInvalidOutput(t *testing.T) {
