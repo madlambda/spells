@@ -10,6 +10,7 @@ go:
   - 1.9
 script:
   - go test -race ./...
+  - go test ./... -bench .
 notifications:
   email:
     - tiago.natel@neoway.com.br
