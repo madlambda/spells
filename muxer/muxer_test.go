@@ -55,13 +55,13 @@ func TestMuxClosedChannels(t *testing.T) {
 	}
 }
 
-func TestErrorOnInvalidOutput(t *testing.T) {
+func TestErrorOnInvalidSink(t *testing.T) {
 }
 
-func TestErrorOnInvalidInput(t *testing.T) {
+func TestErrorOnInvalidSource(t *testing.T) {
 }
 
-func TestErrorOnIncompatibleInputsOutputs(t *testing.T) {
+func TestErrorOnIncompatibleSinkSources(t *testing.T) {
 }
 
 type TestCase struct {

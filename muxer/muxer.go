@@ -15,7 +15,16 @@ import "reflect"
 // with a parameter that is not a channel or with channels
 // of different types.
 //
-// Nil channels will be ignored.
+// The source channels will be used only for reading.
+// While there is an open source channel the sink channel
+// will also remain closed.
+//
+// The provided sink channel will be closed by the muxer
+// when all source channels are closed, so
+// it must be used ONLY for reading operations (never close it).
+//
+// The sink and source channels must transport values of the same
+// type. No nil channels are allowed on the parameters.
 func Do(sink interface{}, sources ...interface{}) error {
 	// TODO type checking
 	// TODO channel direction checking
