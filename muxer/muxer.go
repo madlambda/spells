@@ -4,7 +4,10 @@
 // channels on just one.
 package muxer
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 // Do will mux all the provided source channels on the given
 // sink channel. Both are interface{} since this will
@@ -26,9 +29,10 @@ import "reflect"
 // The sink and source channels must transport values of the same
 // type. No nil channels are allowed on the parameters.
 func Do(sink interface{}, sources ...interface{}) error {
-	// TODO type checking
-	// TODO channel direction checking
-	// TODO empty sources checking
+
+	if err := checkParams(sink, sources); err != nil {
+		return err
+	}
 
 	go func() {
 		sinkVal := reflect.ValueOf(sink)
@@ -62,4 +66,33 @@ func newCases(sources []interface{}) []reflect.SelectCase {
 
 func removeClosedCase(cases []reflect.SelectCase, i int) []reflect.SelectCase {
 	return append(cases[:i], cases[i+1:]...)
+}
+
+func checkParams(sink interface{}, sources []interface{}) error {
+	sinktype := reflect.TypeOf(sink)
+	if sinktype.Kind() != reflect.Chan {
+		return fmt.Errorf("sink has invalid type[%s] kind[%s]", sinktype, sinktype.Kind())
+	}
+
+	for i, source := range sources {
+		sourcetype := reflect.TypeOf(source)
+		if sourcetype.Kind() != reflect.Chan {
+			return fmt.Errorf(
+				"source[%d] has invalid type[%s] kind[%s]",
+				i,
+				sourcetype,
+				sourcetype.Kind(),
+			)
+		}
+		if sourcetype.Elem() != sinktype.Elem() {
+			return fmt.Errorf(
+				"source[%d] is [chan %s] but sink is [chan %s]",
+				i,
+				sourcetype.Elem(),
+				sinktype.Elem(),
+			)
+		}
+	}
+
+	return nil
 }
