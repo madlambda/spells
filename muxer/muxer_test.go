@@ -12,30 +12,46 @@ func TestMux(t *testing.T) {
 		TestCase{
 			name:            "oneInputOneSource",
 			expectedOutputs: []int{666},
-			inputChannels:   1,
+			sourceChannels:  1,
 		},
 		TestCase{
 			name:            "multipleInputsOneSource",
 			expectedOutputs: []int{666, 777, 10, 0, 1},
-			inputChannels:   1,
+			sourceChannels:  1,
 		},
 		TestCase{
 			name:            "sameInputsAsSources",
 			expectedOutputs: []int{666, 777, 10},
-			inputChannels:   3,
+			sourceChannels:  3,
 		},
 		TestCase{
 			name:            "lessInputsThanSources",
 			expectedOutputs: []int{666, 777},
-			inputChannels:   3,
+			sourceChannels:  3,
 		},
 		TestCase{
 			name:            "moreInputsThanSources",
 			expectedOutputs: []int{666, 777, 234},
-			inputChannels:   2,
+			sourceChannels:  2,
 		},
 	} {
 		testMux(t, tcase)
+	}
+}
+
+func TestMuxClosedChannels(t *testing.T) {
+	sink := make(chan int)
+	source1 := make(chan int)
+	source2 := make(chan int)
+
+	close(source1)
+	close(source2)
+
+	assert.NoError(t, muxer.Do(sink, source1, source2))
+
+	v, ok := <-sink
+	if ok {
+		t.Fatalf("expected sink to be closed, instead got val[%d]", v)
 	}
 }
 
@@ -51,40 +67,40 @@ func TestErrorOnIncompatibleInputsOutputs(t *testing.T) {
 type TestCase struct {
 	name            string
 	expectedOutputs []int
-	inputChannels   int
+	sourceChannels  int
 }
 
 func testMux(t *testing.T, tcase TestCase) {
 	t.Run(tcase.name, func(t *testing.T) {
-		inputs := []chan int{}
-		inputsgen := []interface{}{}
-		for i := 0; i < tcase.inputChannels; i++ {
-			input := make(chan int)
-			inputs = append(inputs, input)
-			inputsgen = append(inputsgen, input)
+		sources := []chan int{}
+		sourcesgen := []interface{}{}
+		for i := 0; i < tcase.sourceChannels; i++ {
+			source := make(chan int)
+			sources = append(sources, source)
+			sourcesgen = append(sourcesgen, source)
 		}
-		output := make(chan int)
-		assert.NoError(t, muxer.Do(output, inputsgen...))
+		sink := make(chan int)
+		assert.NoError(t, muxer.Do(sink, sourcesgen...))
 
 		go func() {
 			for i, v := range tcase.expectedOutputs {
-				inindex := i % len(inputs)
-				inputs[inindex] <- v
+				inindex := i % len(sources)
+				sources[inindex] <- v
 			}
 
-			for _, input := range inputs {
-				close(input)
+			for _, source := range sources {
+				close(source)
 			}
 		}()
 
 		for _, want := range tcase.expectedOutputs {
-			got := <-output
+			got := <-sink
 			assert.EqualInts(t, want, got)
 		}
 
-		v, ok := <-output
+		v, ok := <-sink
 		if ok {
-			t.Fatalf("expected output to be closed, got val[%d]", v)
+			t.Fatalf("expected sink to be closed, got val[%d]", v)
 		}
 	})
 }
