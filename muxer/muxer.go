@@ -5,6 +5,7 @@
 package muxer
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 )
@@ -69,12 +70,24 @@ func removeClosedCase(cases []reflect.SelectCase, i int) []reflect.SelectCase {
 }
 
 func checkParams(sink interface{}, sources []interface{}) error {
+	if sink == nil {
+		return errors.New("sink channel is a nil empty interface")
+	}
+
 	sinktype := reflect.TypeOf(sink)
 	if sinktype.Kind() != reflect.Chan {
 		return fmt.Errorf("sink has invalid type[%s] kind[%s]", sinktype, sinktype.Kind())
 	}
 
+	if reflect.ValueOf(sink).IsNil() {
+		return errors.New("sink channel is nil")
+	}
+
 	for i, source := range sources {
+		if source == nil {
+			return fmt.Errorf("invalid nil source channel at position[%d]", i)
+		}
+
 		sourcetype := reflect.TypeOf(source)
 		if sourcetype.Kind() != reflect.Chan {
 			return fmt.Errorf(
@@ -84,6 +97,11 @@ func checkParams(sink interface{}, sources []interface{}) error {
 				sourcetype.Kind(),
 			)
 		}
+
+		if reflect.ValueOf(source).IsNil() {
+			return errors.New("source channel is nil")
+		}
+
 		if sourcetype.Elem() != sinktype.Elem() {
 			return fmt.Errorf(
 				"source[%d] is [chan %s] but sink is [chan %s]",

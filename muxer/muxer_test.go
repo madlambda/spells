@@ -56,14 +56,7 @@ func TestMuxClosedChannels(t *testing.T) {
 }
 
 func TestErrorOnInvalidSink(t *testing.T) {
-	validSink := make(chan int)
-	cases := map[string]interface{}{
-		"notChannel":       1,
-		"pointerToChannel": &validSink,
-		"wrongType":        make(chan uint),
-	}
-
-	for name, sink := range cases {
+	for name, sink := range invalidCases() {
 		t.Run(name, func(t *testing.T) {
 			source := make(chan int)
 			assert.Error(t, muxer.Do(sink, source))
@@ -72,14 +65,7 @@ func TestErrorOnInvalidSink(t *testing.T) {
 }
 
 func TestErrorOnInvalidSource(t *testing.T) {
-	validSource := make(chan int)
-	cases := map[string]interface{}{
-		"notChannel":       1,
-		"pointerToChannel": &validSource,
-		"wrongType":        make(chan uint),
-	}
-
-	for name, source := range cases {
+	for name, source := range invalidCases() {
 		t.Run(name, func(t *testing.T) {
 			sink := make(chan int)
 			assert.Error(t, muxer.Do(sink, source))
@@ -91,6 +77,19 @@ type TestCase struct {
 	name            string
 	expectedOutputs []int
 	sourceChannels  int
+}
+
+func invalidCases() map[string]interface{} {
+	valid := make(chan int)
+	var nilChannel chan int
+
+	return map[string]interface{}{
+		"nil":              nil,
+		"nilChannel":       nilChannel,
+		"notChannel":       1,
+		"pointerToChannel": &valid,
+		"wrongType":        make(chan uint),
+	}
 }
 
 func testMux(t *testing.T, tcase TestCase) {
