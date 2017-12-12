@@ -1,0 +1,18 @@
+os:
+  - linux
+  - osx
+
+language: go
+sudo: false
+
+go:
+  - tip
+  - 1.9
+script:
+  - go test -race ./...
+  - go test ./... -bench .
+notifications:
+  email:
+    - tiago.natel@neoway.com.br
+    - tiagokatcipis@gmail.com
+    - vitorarins@gmail.com
