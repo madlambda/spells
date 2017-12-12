@@ -55,6 +55,69 @@ func TestMuxClosedChannels(t *testing.T) {
 	}
 }
 
+func TestMuxCloseFirstSource(t *testing.T) {
+	sink := make(chan int)
+	source1 := make(chan int)
+	source2 := make(chan int)
+	source3 := make(chan int)
+
+	assert.NoError(t, muxer.Do(sink, source1, source2, source3))
+
+	close(source1)
+
+	want1 := 666
+	want2 := 777
+	go func() {
+		source3 <- want1
+		source2 <- want2
+	}()
+
+	assert.EqualInts(t, want1, <-sink)
+	assert.EqualInts(t, want2, <-sink)
+}
+
+func TestMuxCloseMiddleSource(t *testing.T) {
+	sink := make(chan int)
+	source1 := make(chan int)
+	source2 := make(chan int)
+	source3 := make(chan int)
+
+	assert.NoError(t, muxer.Do(sink, source1, source2, source3))
+
+	close(source2)
+
+	want1 := 100
+	want2 := 7
+	go func() {
+		source3 <- want1
+		source1 <- want2
+	}()
+
+	assert.EqualInts(t, want1, <-sink)
+	assert.EqualInts(t, want2, <-sink)
+}
+
+func TestMuxCloseLastSource(t *testing.T) {
+	sink := make(chan int)
+	source1 := make(chan int)
+	source2 := make(chan int)
+	source3 := make(chan int)
+
+	assert.NoError(t, muxer.Do(sink, source1, source2, source3))
+
+	close(source3)
+
+	want1 := 100
+	want2 := 7
+	go func() {
+		source2 <- want1
+		source1 <- want2
+	}()
+
+	assert.EqualInts(t, want1, <-sink)
+	assert.EqualInts(t, want2, <-sink)
+}
+
 func TestMuxDirectionedChannels(t *testing.T) {
 	sink := make(chan string)
 	source := make(chan string)
