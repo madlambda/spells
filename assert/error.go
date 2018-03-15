@@ -3,8 +3,9 @@ package assert
 import "testing"
 
 func NoError(t *testing.T, err error, details ...interface{}) {
+	t.Helper()
 	if err != nil {
-		t.Fatalf("unexpected error[%s].%s", errordetails(details...))
+		t.Fatalf("unexpected error[%s].%s", err, errordetails(details...))
 	}
 }
 
