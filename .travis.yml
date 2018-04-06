@@ -9,8 +9,8 @@ go:
   - "1.10"
 
 script:
-  - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
-  - go test ./... -bench .
+  - make test
+  - make bench
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
