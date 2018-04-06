@@ -10,13 +10,15 @@
 // be your judgement call. If you choose the semaphore here you got one.
 package semaphore
 
-import "context"
+import (
+	"fmt"
+	"context"
+)
 
 // S is a semaphore instance. Always use the New function
 // to create semaphores. Using a unproperly initialized
 // semaphore may cause mayhem on your code.
-type S struct {
-}
+type S chan struct{}
 
 // Release is used to release a previous call to S.Acquire
 type Release func()
@@ -24,9 +26,11 @@ type Release func()
 // New creates a new semaphore with the given size.
 // Passing 0 as size is a moronic programming mistake and will
 // result in a panic due to its moronicness.
-func New(size uint) *S {
-	panic("TODO")
-	return &S{}
+func New(size uint) S {
+	if size == 0 {
+		panic("semaphore.New:cant create a semaphore with size 0")
+	}
+	return S(make(chan struct{}, size))
 }
 
 // Acquire will acquire the semaphore, if the semaphore is
@@ -43,6 +47,18 @@ func New(size uint) *S {
 // Never calling release is also a terrible idea since this may cause
 // starvation to resources if the semaphore is used to provide controlled
 // access to some resource (usually an expensive one).
-func (s *S) Acquire(ctx context.Context) (Release, error) {
-	return func() {}, nil
+func (s S) Acquire(ctx context.Context) (Release, error) {
+	select {
+		case s <- struct{}{}:
+			{
+				return func(){
+					// TODO: test double release
+					<- s
+				}, nil
+			}
+		case <- ctx.Done():
+			{
+				return func(){}, fmt.Errorf("error[%s] waiting for semaphore", ctx.Err())
+			}
+	}
 }
