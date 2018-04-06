@@ -51,8 +51,15 @@ func (s S) Acquire(ctx context.Context) (Release, error) {
 	select {
 		case s <- struct{}{}:
 			{
+				released := false
 				return func(){
-					// TODO: test double release
+					// If release is called twice on different goroutines it
+					// may release a semaphore twice, but this is as far as we
+					// go to avoid the client doing VERY stupid stuff.
+					if released {
+						panic("released semaphore twice for the same Acquire")
+					}
+					released = true
 					<- s
 				}, nil
 			}

@@ -29,7 +29,7 @@ func TestSemaphore(t *testing.T) {
 func TestSemaphoreSizeCantBeZero(t *testing.T) {
 	defer func() {
         if r := recover(); r == nil {
-            t.Errorf("Expected panic on sempahore with size 0")
+            t.Errorf("Expected panic on semaphore with size 0")
         }
     }()
     
@@ -37,7 +37,18 @@ func TestSemaphoreSizeCantBeZero(t *testing.T) {
 }
 
 func TestSemaphoreCantReleaseSameAcquireTwice(t *testing.T) {
-	// TODO
+	defer func() {
+        if r := recover(); r == nil {
+            t.Errorf("Expected panic releasing semaphore twice")
+        }
+    }()
+
+	s := semaphore.New(1)
+	release, err := s.Acquire(context.Background())
+	
+	assert.NoError(t, err)
+	release()
+	release()
 }
 
 func testSemaphore(t *testing.T, s semaphore.S, size uint) {
