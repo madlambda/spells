@@ -7,12 +7,18 @@ sudo: false
 
 go:
   - tip
+  - 1.10
   - 1.9
+
 script:
-  - go test -race ./...
+  - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
   - go test ./... -bench .
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+  
 notifications:
   email:
-    - tiago.natel@neoway.com.br
+    - tiago4orion@gmail.com
     - tiagokatcipis@gmail.com
     - vitorarins@gmail.com
