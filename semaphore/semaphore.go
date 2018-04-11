@@ -45,7 +45,7 @@ func New(size uint) S {
 // I think, at least the bugged code is the one who will get screwed).
 //
 // Never calling release is also a terrible idea since this may cause
-// starvation to resources if the semaphore is used to provide controlled
+// starvation of resources if the semaphore is used to provide controlled
 // access to some resource (usually an expensive one).
 func (s S) Acquire(ctx context.Context) (Release, error) {
 	select {

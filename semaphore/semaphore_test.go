@@ -5,6 +5,7 @@ import (
 	"time"
 	"testing"
 	"context"
+	"runtime"
 	
 	"github.com/madlambda/spells/assert"
 	"github.com/madlambda/spells/semaphore"
@@ -27,21 +28,12 @@ func TestSemaphore(t *testing.T) {
 }
 
 func TestSemaphoreSizeCantBeZero(t *testing.T) {
-	defer func() {
-        if r := recover(); r == nil {
-            t.Errorf("Expected panic on semaphore with size 0")
-        }
-    }()
-    
+	defer assertPanic(t, "expected panic creating semaphore with size 0")
     semaphore.New(0)
 }
 
 func TestSemaphoreCantReleaseSameAcquireTwice(t *testing.T) {
-	defer func() {
-        if r := recover(); r == nil {
-            t.Errorf("Expected panic releasing semaphore twice")
-        }
-    }()
+	defer assertPanic(t, "Expected panic releasing semaphore twice")
 
 	s := semaphore.New(1)
 	release, err := s.Acquire(context.Background())
@@ -49,6 +41,16 @@ func TestSemaphoreCantReleaseSameAcquireTwice(t *testing.T) {
 	assert.NoError(t, err)
 	release()
 	release()
+}
+
+func assertPanic(t *testing.T, errmsg string) {
+	r := recover()
+	if r == nil {
+		t.Error(errmsg)
+    }
+    if _, ok := r.(runtime.Error); ok {
+    	t.Errorf("Unexpected runtime error[%s]", r)
+    }
 }
 
 func testSemaphore(t *testing.T, s semaphore.S, size uint) {
