@@ -12,6 +12,7 @@ package semaphore
 
 import (
 	"fmt"
+	"sync"
 	"context"
 )
 
@@ -51,11 +52,12 @@ func (s S) Acquire(ctx context.Context) (Release, error) {
 	select {
 		case s <- struct{}{}:
 			{
+				r := &sync.Mutex{}
 				released := false
 				return func(){
-					// If release is called twice on different goroutines it
-					// may release a semaphore twice (race), but this is as far as we
-					// go to avoid the client doing VERY stupid stuff.
+					r.Lock()
+					defer r.Unlock()
+					
 					if released {
 						panic("released semaphore twice for the same Acquire")
 					}
