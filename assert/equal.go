@@ -48,10 +48,15 @@ func EqualErrs(
 				t.Fatalf("wanted[%s] but got[%s].%s", want,
 					got, detail)
 			}
+
+			return
 		}
 
 		t.Fatalf("got unexpected error[%s].%s", got, detail)
-	} else if want != nil {
+		return
+	}
+
+	if want != nil {
 		t.Fatalf("expected error[%s] but got nil.%s",
 			want, detail)
 	}
