@@ -9,6 +9,7 @@ go:
   - "1.10"
 
 script:
+  - make analysis
   - make test
   - make bench
 
