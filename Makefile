@@ -9,6 +9,9 @@ fmt:
 bench:
 	- go test ./... -bench .
 	
+	
 analysis:
+	go get golang.org/x/lint/golint
 	go get honnef.co/go/tools/cmd/megacheck
 	megacheck ./...
+	golint ./...
