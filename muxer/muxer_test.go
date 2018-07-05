@@ -134,7 +134,7 @@ func TestMuxDirectionedChannels(t *testing.T) {
 
 	assert.NoError(t, muxer.Do(sinkd, sourced))
 
-	v, _ := <-sink
+	v := <-sink
 	assert.EqualStrings(t, expectedVal, v)
 }
 

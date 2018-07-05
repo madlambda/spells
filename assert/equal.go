@@ -8,6 +8,9 @@ import (
 
 var ε = math.Nextafter(1, 2) - 1
 
+// EqualStrings compares the two strings for equality.
+// If they are not equal t.Fatal is called using the details parameter.
+// The details parameter can be a single string of a format string + parameters.
 func EqualStrings(t *testing.T, want string, got string, details ...interface{}) {
 	t.Helper()
 	if want != got {
@@ -16,6 +19,9 @@ func EqualStrings(t *testing.T, want string, got string, details ...interface{})
 	}
 }
 
+// EqualInts compares the two ints for equality.
+// If they are not equal t.Fatal is called using the details parameter.
+// The details parameter can be a single string of a format string + parameters.
 func EqualInts(t *testing.T, want int, got int, details ...interface{}) {
 	t.Helper()
 	if want != got {
@@ -24,6 +30,9 @@ func EqualInts(t *testing.T, want int, got int, details ...interface{}) {
 	}
 }
 
+// EqualFloats compares the two floats for equality.
+// If they are not equal t.Fatal is called using the details parameter.
+// The details parameter can be a single string of a format string + parameters.
 func EqualFloats(
 	t *testing.T, want, got float64, details ...interface{},
 ) {
@@ -36,6 +45,10 @@ func EqualFloats(
 	}
 }
 
+// EqualErrs compares if two errors have the same error description (by calling .Error()).
+// If they are not equal t.Fatal is called using the details parameter.
+// Both errors can't be nil.
+// The details parameter can be a single string of a format string + parameters.
 func EqualErrs(
 	t *testing.T, want, got error, details ...interface{},
 ) {

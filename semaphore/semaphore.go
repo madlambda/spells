@@ -1,4 +1,4 @@
-// Package sempaphore provides a simple implementation of a semaphore (hence the name, duh).
+// Package semaphore provides a simple implementation of a semaphore (hence the name, duh).
 // Semaphores may be usefull to enforce a upper bound on how much
 // concurrent units executes some algorithm that is very heavy on memory and/or CPU.
 //
