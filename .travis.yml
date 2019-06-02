@@ -6,7 +6,7 @@ sudo: false
 
 go:
   - "tip"
-  - "1.10"
+  - "1.12"
 
 script:
   - make analysis
@@ -15,7 +15,7 @@ script:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  
+
 notifications:
   email:
     - tiago4orion@gmail.com
