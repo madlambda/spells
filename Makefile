@@ -1,3 +1,5 @@
+golangci_lint_version=1.21.0
+
 all: analysis test
 
 test:
@@ -9,8 +11,5 @@ fmt:
 bench:
 	go test ./... -bench .
 
-analysis:
-	go get golang.org/x/lint/golint
-	go get honnef.co/go/tools/cmd/megacheck
-	megacheck ./...
-	golint ./...
+lint:
+	docker run --rm -v `pwd`:/app -w /app golangci/golangci-lint:v$(golangci_lint_version)  golangci-lint run ./...
