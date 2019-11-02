@@ -41,11 +41,11 @@ func Do(sink interface{}, sources ...interface{}) error {
 			chosen, recv, recvOK := reflect.Select(receiveCases)
 			if recvOK {
 				sinkVal.Send(recv)
-				continue
+			} else {
+				receiveCases = removeClosedCase(receiveCases, chosen)
 			}
-
-			receiveCases = removeClosedCase(receiveCases, chosen)
 		}
+
 		sinkVal.Close()
 	}()
 
