@@ -9,37 +9,37 @@ import (
 
 func TestMux(t *testing.T) {
 	for _, tcase := range []TestCase{
-		TestCase{
+		{
 			name:            "NoDataOneSource",
 			expectedOutputs: []int{},
 			sourceChannels:  1,
 		},
-		TestCase{
+		{
 			name:            "NoDataMultipleSources",
 			expectedOutputs: []int{},
 			sourceChannels:  10,
 		},
-		TestCase{
+		{
 			name:            "OneInputOneSource",
 			expectedOutputs: []int{666},
 			sourceChannels:  1,
 		},
-		TestCase{
+		{
 			name:            "MultipleInputsOneSource",
 			expectedOutputs: []int{666, 777, 10, 0, 1},
 			sourceChannels:  1,
 		},
-		TestCase{
+		{
 			name:            "SameInputsAsSources",
 			expectedOutputs: []int{666, 777, 10},
 			sourceChannels:  3,
 		},
-		TestCase{
+		{
 			name:            "LessInputsThanSources",
 			expectedOutputs: []int{666, 777},
 			sourceChannels:  10,
 		},
-		TestCase{
+		{
 			name:            "MoreInputsThanSources",
 			expectedOutputs: []int{666, 777, 234, 1, 0},
 			sourceChannels:  2,

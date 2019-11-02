@@ -11,9 +11,9 @@
 package semaphore
 
 import (
+	"context"
 	"fmt"
 	"sync"
-	"context"
 )
 
 // S is a semaphore instance. Always use the New function
@@ -50,24 +50,24 @@ func New(size uint) S {
 // access to some resource (usually an expensive one).
 func (s S) Acquire(ctx context.Context) (Release, error) {
 	select {
-		case s <- struct{}{}:
-			{
-				r := &sync.Mutex{}
-				released := false
-				return func(){
-					r.Lock()
-					defer r.Unlock()
-					
-					if released {
-						panic("released semaphore twice for the same Acquire")
-					}
-					released = true
-					<- s
-				}, nil
-			}
-		case <- ctx.Done():
-			{
-				return func(){}, fmt.Errorf("error[%s] waiting for semaphore", ctx.Err())
-			}
+	case s <- struct{}{}:
+		{
+			r := &sync.Mutex{}
+			released := false
+			return func() {
+				r.Lock()
+				defer r.Unlock()
+
+				if released {
+					panic("released semaphore twice for the same Acquire")
+				}
+				released = true
+				<-s
+			}, nil
+		}
+	case <-ctx.Done():
+		{
+			return func() {}, fmt.Errorf("error[%s] waiting for semaphore", ctx.Err())
+		}
 	}
 }
