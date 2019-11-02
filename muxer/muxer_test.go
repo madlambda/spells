@@ -10,6 +10,16 @@ import (
 func TestMux(t *testing.T) {
 	for _, tcase := range []TestCase{
 		TestCase{
+			name:            "NoDataOneSource",
+			expectedOutputs: []int{},
+			sourceChannels:  1,
+		},
+		TestCase{
+			name:            "NoDataMultipleSources",
+			expectedOutputs: []int{},
+			sourceChannels:  10,
+		},
+		TestCase{
 			name:            "OneInputOneSource",
 			expectedOutputs: []int{666},
 			sourceChannels:  1,
@@ -27,7 +37,7 @@ func TestMux(t *testing.T) {
 		TestCase{
 			name:            "LessInputsThanSources",
 			expectedOutputs: []int{666, 777},
-			sourceChannels:  3,
+			sourceChannels:  10,
 		},
 		TestCase{
 			name:            "MoreInputsThanSources",
@@ -125,7 +135,7 @@ func TestMuxDirectionedChannels(t *testing.T) {
 	var sinkd chan<- string = sink
 	var sourced <-chan string = source
 
-	const expectedVal string = "lambda"
+	const expectedVal = "lambda"
 
 	go func() {
 		source <- expectedVal
@@ -139,26 +149,14 @@ func TestMuxDirectionedChannels(t *testing.T) {
 }
 
 func TestFailsOnWrongSourceDirection(t *testing.T) {
-	// the reflect package validates like this =(
-	//tt := (*chanType)(unsafe.Pointer(ch.typ))
-	//if ChanDir(tt.dir)&RecvDir == 0 {
-	//panic("reflect.Select: RecvDir case using send-only channel")
-	//}
-	t.Skip("no good way to verify direction =(")
 	sink := make(chan string)
 	source := make(chan string)
-
 	var sourced chan<- string = source
+
 	assert.Error(t, muxer.Do(sink, sourced))
 }
 
 func TestFailsOnWrongSinkDirection(t *testing.T) {
-	// the reflect package validates like this =(
-	//tt := (*chanType)(unsafe.Pointer(ch.typ))
-	//if ChanDir(tt.dir)&RecvDir == 0 {
-	//panic("reflect.Select: RecvDir case using send-only channel")
-	//}
-	t.Skip("no good way to verify direction =(")
 	sink := make(chan string)
 	source := make(chan string)
 
@@ -222,7 +220,6 @@ func testMux(t *testing.T, tcase TestCase) {
 				srcindex := i % len(sources)
 				sources[srcindex] <- v
 			}
-
 			for _, source := range sources {
 				close(source)
 			}

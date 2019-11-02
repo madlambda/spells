@@ -77,6 +77,10 @@ func checkParams(sink interface{}, sources []interface{}) error {
 		return fmt.Errorf("sink has invalid type[%s] kind[%s]", sinktype, sinktype.Kind())
 	}
 
+	if sinktype.ChanDir() == reflect.RecvDir {
+		return errors.New("sink channel is receive only, sink channels MUST be able to send")
+	}
+
 	if reflect.ValueOf(sink).IsNil() {
 		return errors.New("sink channel is nil")
 	}
@@ -88,12 +92,11 @@ func checkParams(sink interface{}, sources []interface{}) error {
 
 		sourcetype := reflect.TypeOf(source)
 		if sourcetype.Kind() != reflect.Chan {
-			return fmt.Errorf(
-				"source[%d] has invalid type[%s] kind[%s]",
-				i,
-				sourcetype,
-				sourcetype.Kind(),
-			)
+			return fmt.Errorf("source[%d] has invalid type[%s] kind[%s]", i, sourcetype, sourcetype.Kind())
+		}
+
+		if sourcetype.ChanDir() == reflect.SendDir {
+			return errors.New("source channel is send only, source channels MUST be able to receive")
 		}
 
 		if reflect.ValueOf(source).IsNil() {
@@ -101,12 +104,7 @@ func checkParams(sink interface{}, sources []interface{}) error {
 		}
 
 		if sourcetype.Elem() != sinktype.Elem() {
-			return fmt.Errorf(
-				"source[%d] is [chan %s] but sink is [chan %s]",
-				i,
-				sourcetype.Elem(),
-				sinktype.Elem(),
-			)
+			return fmt.Errorf("source[%d] is [chan %s] but sink is [chan %s]", i, sourcetype.Elem(), sinktype.Elem())
 		}
 	}
 
