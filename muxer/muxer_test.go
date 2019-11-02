@@ -20,27 +20,27 @@ func TestMux(t *testing.T) {
 			sourceChannels:  10,
 		},
 		{
-			name:            "OneInputOneSource",
+			name:            "OneOutputOneSource",
 			expectedOutputs: []int{666},
 			sourceChannels:  1,
 		},
 		{
-			name:            "MultipleInputsOneSource",
+			name:            "MultipleOutputsOneSource",
 			expectedOutputs: []int{666, 777, 10, 0, 1},
 			sourceChannels:  1,
 		},
 		{
-			name:            "SameInputsAsSources",
+			name:            "SameOutputsAsSources",
 			expectedOutputs: []int{666, 777, 10},
 			sourceChannels:  3,
 		},
 		{
-			name:            "LessInputsThanSources",
+			name:            "LessOutputsThanSources",
 			expectedOutputs: []int{666, 777},
 			sourceChannels:  10,
 		},
 		{
-			name:            "MoreInputsThanSources",
+			name:            "MoreOutputsThanSources",
 			expectedOutputs: []int{666, 777, 234, 1, 0},
 			sourceChannels:  2,
 		},
@@ -132,8 +132,8 @@ func TestMuxDirectionedChannels(t *testing.T) {
 	sink := make(chan string)
 	source := make(chan string)
 
-	var sinkd chan<- string = sink
-	var sourced <-chan string = source
+	var sinkSendOnly chan<- string = sink
+	var sourceReadOnly <-chan string = source
 
 	const expectedVal = "lambda"
 
@@ -142,7 +142,7 @@ func TestMuxDirectionedChannels(t *testing.T) {
 		close(source)
 	}()
 
-	assert.NoError(t, muxer.Do(sinkd, sourced))
+	assert.NoError(t, muxer.Do(sinkSendOnly, sourceReadOnly))
 
 	v := <-sink
 	assert.EqualStrings(t, expectedVal, v)
@@ -151,35 +151,35 @@ func TestMuxDirectionedChannels(t *testing.T) {
 func TestFailsOnWrongSourceDirection(t *testing.T) {
 	sink := make(chan string)
 	source := make(chan string)
-	var sourced chan<- string = source
+	var sourceSendOnly chan<- string = source
 
-	assert.Error(t, muxer.Do(sink, sourced))
+	assert.Error(t, muxer.Do(sink, sourceSendOnly))
 }
 
 func TestFailsOnWrongSinkDirection(t *testing.T) {
 	sink := make(chan string)
 	source := make(chan string)
 
-	var sinkd <-chan string = sink
-	assert.Error(t, muxer.Do(sinkd, source))
+	var sinkReadOnly <-chan string = sink
+	assert.Error(t, muxer.Do(sinkReadOnly, source))
 }
 
 func TestErrorOnInvalidSink(t *testing.T) {
-	for name, sink := range invalidCases() {
+	for name, invalidSink := range invalidCases() {
 		t.Run(name, func(t *testing.T) {
 			source := make(chan int)
-			assert.Error(t, muxer.Do(sink, source))
+			assert.Error(t, muxer.Do(invalidSink, source))
 		})
 	}
 }
 
 func TestErrorOnInvalidSource(t *testing.T) {
-	for name, source := range invalidCases() {
+	for name, invalidSource := range invalidCases() {
 		t.Run(name, func(t *testing.T) {
 			sink := make(chan int)
 			validSource := make(chan int)
-			assert.Error(t, muxer.Do(sink, validSource, source))
-			assert.Error(t, muxer.Do(sink, source, validSource))
+			assert.Error(t, muxer.Do(sink, validSource, invalidSource))
+			assert.Error(t, muxer.Do(sink, invalidSource, validSource))
 		})
 	}
 }
