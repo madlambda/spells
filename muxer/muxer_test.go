@@ -10,27 +10,27 @@ import (
 func TestMux(t *testing.T) {
 	for _, tcase := range []TestCase{
 		TestCase{
-			name:            "oneInputOneSource",
+			name:            "OneInputOneSource",
 			expectedOutputs: []int{666},
 			sourceChannels:  1,
 		},
 		TestCase{
-			name:            "multipleInputsOneSource",
+			name:            "MultipleInputsOneSource",
 			expectedOutputs: []int{666, 777, 10, 0, 1},
 			sourceChannels:  1,
 		},
 		TestCase{
-			name:            "sameInputsAsSources",
+			name:            "SameInputsAsSources",
 			expectedOutputs: []int{666, 777, 10},
 			sourceChannels:  3,
 		},
 		TestCase{
-			name:            "lessInputsThanSources",
+			name:            "LessInputsThanSources",
 			expectedOutputs: []int{666, 777},
 			sourceChannels:  3,
 		},
 		TestCase{
-			name:            "moreInputsThanSources",
+			name:            "MoreInputsThanSources",
 			expectedOutputs: []int{666, 777, 234, 1, 0},
 			sourceChannels:  2,
 		},
@@ -219,8 +219,8 @@ func testMux(t *testing.T, tcase TestCase) {
 
 		go func() {
 			for i, v := range tcase.expectedOutputs {
-				inindex := i % len(sources)
-				sources[inindex] <- v
+				srcindex := i % len(sources)
+				sources[srcindex] <- v
 			}
 
 			for _, source := range sources {
@@ -228,14 +228,18 @@ func testMux(t *testing.T, tcase TestCase) {
 			}
 		}()
 
-		for _, want := range tcase.expectedOutputs {
-			got := <-sink
-			assert.EqualInts(t, want, got)
+		gotOutputs := []int{}
+		for got := range sink {
+			gotOutputs = append(gotOutputs, got)
 		}
 
-		v, ok := <-sink
-		if ok {
-			t.Fatalf("expected sink to be closed, got val[%d]", v)
+		if len(gotOutputs) != len(tcase.expectedOutputs) {
+			t.Fatalf("got %v != want %v", gotOutputs, tcase.expectedOutputs)
+		}
+
+		for i, want := range tcase.expectedOutputs {
+			got := gotOutputs[i]
+			assert.EqualInts(t, want, got)
 		}
 	})
 }

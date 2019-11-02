@@ -11,24 +11,22 @@ import (
 )
 
 // Do will mux all the provided source channels on the given
-// sink channel. Both are interface{} since this will
+// sink channel. All channels are interface{} since this will
 // mux any type of channel (a point for generics =/).
 //
 // A goroutine is created to perform the muxing.
-// It is a severe programming error to call this function
+// It is a programming error to call this function
 // with a parameter that is not a channel or with channels
 // of different types.
 //
 // The source channels will be used only for reading.
 // While there is an open source channel the sink channel
-// will also remain closed.
+// will also remain open.
 //
 // The provided sink channel will be closed by the muxer
 // when all source channels are closed, so
-// it must be used ONLY for reading operations (never close it).
-//
-// The sink and source channels must transport values of the same
-// type. No nil channels are allowed on the parameters.
+// it must be used ONLY for reading operations,
+// never write on it or close it.
 func Do(sink interface{}, sources ...interface{}) error {
 
 	if err := checkParams(sink, sources); err != nil {
