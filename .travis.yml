@@ -7,9 +7,10 @@ sudo: false
 go:
   - "tip"
   - "1.12"
+  - "1.11"
 
 script:
-  - make analysis
+  - make lint
   - make test
   - make bench
 
