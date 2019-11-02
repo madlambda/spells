@@ -1,5 +1,5 @@
 // Package semaphore provides a simple implementation of a semaphore (hence the name, duh).
-// Semaphores may be usefull to enforce a upper bound on how much
+// Semaphores may be useful to enforce a upper bound on how much
 // concurrent units executes some algorithm that is very heavy on memory and/or CPU.
 //
 // One example is when you have an http server that can accept hundreds
