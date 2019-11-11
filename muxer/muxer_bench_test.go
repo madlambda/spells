@@ -78,7 +78,7 @@ func newWorker() <-chan time.Duration {
 func newWorstCaseWorker() <-chan time.Duration {
 	res := make(chan time.Duration)
 	go func() {
-		sleep := time.Duration(maxTimeMilli * time.Millisecond)
+		sleep := maxTimeMilli * time.Millisecond
 		time.Sleep(sleep)
 		res <- sleep
 		close(res)

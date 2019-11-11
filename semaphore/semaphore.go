@@ -1,5 +1,5 @@
 // Package semaphore provides a simple implementation of a semaphore (hence the name, duh).
-// Semaphores may be usefull to enforce a upper bound on how much
+// Semaphores may be useful to enforce a upper bound on how much
 // concurrent units executes some algorithm that is very heavy on memory and/or CPU.
 //
 // One example is when you have an http server that can accept hundreds
@@ -11,9 +11,9 @@
 package semaphore
 
 import (
+	"context"
 	"fmt"
 	"sync"
-	"context"
 )
 
 // S is a semaphore instance. Always use the New function
@@ -50,24 +50,24 @@ func New(size uint) S {
 // access to some resource (usually an expensive one).
 func (s S) Acquire(ctx context.Context) (Release, error) {
 	select {
-		case s <- struct{}{}:
-			{
-				r := &sync.Mutex{}
-				released := false
-				return func(){
-					r.Lock()
-					defer r.Unlock()
-					
-					if released {
-						panic("released semaphore twice for the same Acquire")
-					}
-					released = true
-					<- s
-				}, nil
-			}
-		case <- ctx.Done():
-			{
-				return func(){}, fmt.Errorf("error[%s] waiting for semaphore", ctx.Err())
-			}
+	case s <- struct{}{}:
+		{
+			r := &sync.Mutex{}
+			released := false
+			return func() {
+				r.Lock()
+				defer r.Unlock()
+
+				if released {
+					panic("released semaphore twice for the same Acquire")
+				}
+				released = true
+				<-s
+			}, nil
+		}
+	case <-ctx.Done():
+		{
+			return func() {}, fmt.Errorf("error[%s] waiting for semaphore", ctx.Err())
+		}
 	}
 }

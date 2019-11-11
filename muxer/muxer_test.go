@@ -9,28 +9,38 @@ import (
 
 func TestMux(t *testing.T) {
 	for _, tcase := range []TestCase{
-		TestCase{
-			name:            "oneInputOneSource",
+		{
+			name:            "NoDataOneSource",
+			expectedOutputs: []int{},
+			sourceChannels:  1,
+		},
+		{
+			name:            "NoDataMultipleSources",
+			expectedOutputs: []int{},
+			sourceChannels:  10,
+		},
+		{
+			name:            "OneOutputOneSource",
 			expectedOutputs: []int{666},
 			sourceChannels:  1,
 		},
-		TestCase{
-			name:            "multipleInputsOneSource",
+		{
+			name:            "MultipleOutputsOneSource",
 			expectedOutputs: []int{666, 777, 10, 0, 1},
 			sourceChannels:  1,
 		},
-		TestCase{
-			name:            "sameInputsAsSources",
+		{
+			name:            "SameOutputsAsSources",
 			expectedOutputs: []int{666, 777, 10},
 			sourceChannels:  3,
 		},
-		TestCase{
-			name:            "lessInputsThanSources",
+		{
+			name:            "LessOutputsThanSources",
 			expectedOutputs: []int{666, 777},
-			sourceChannels:  3,
+			sourceChannels:  10,
 		},
-		TestCase{
-			name:            "moreInputsThanSources",
+		{
+			name:            "MoreOutputsThanSources",
 			expectedOutputs: []int{666, 777, 234, 1, 0},
 			sourceChannels:  2,
 		},
@@ -122,66 +132,54 @@ func TestMuxDirectionedChannels(t *testing.T) {
 	sink := make(chan string)
 	source := make(chan string)
 
-	var sinkd chan<- string = sink
-	var sourced <-chan string = source
+	var sinkSendOnly chan<- string = sink
+	var sourceReadOnly <-chan string = source
 
-	const expectedVal string = "lambda"
+	const expectedVal = "lambda"
 
 	go func() {
 		source <- expectedVal
 		close(source)
 	}()
 
-	assert.NoError(t, muxer.Do(sinkd, sourced))
+	assert.NoError(t, muxer.Do(sinkSendOnly, sourceReadOnly))
 
 	v := <-sink
 	assert.EqualStrings(t, expectedVal, v)
 }
 
 func TestFailsOnWrongSourceDirection(t *testing.T) {
-	// the reflect package validates like this =(
-	//tt := (*chanType)(unsafe.Pointer(ch.typ))
-	//if ChanDir(tt.dir)&RecvDir == 0 {
-	//panic("reflect.Select: RecvDir case using send-only channel")
-	//}
-	t.Skip("no good way to verify direction =(")
 	sink := make(chan string)
 	source := make(chan string)
+	var sourceSendOnly chan<- string = source
 
-	var sourced chan<- string = source
-	assert.Error(t, muxer.Do(sink, sourced))
+	assert.Error(t, muxer.Do(sink, sourceSendOnly))
 }
 
 func TestFailsOnWrongSinkDirection(t *testing.T) {
-	// the reflect package validates like this =(
-	//tt := (*chanType)(unsafe.Pointer(ch.typ))
-	//if ChanDir(tt.dir)&RecvDir == 0 {
-	//panic("reflect.Select: RecvDir case using send-only channel")
-	//}
-	t.Skip("no good way to verify direction =(")
 	sink := make(chan string)
 	source := make(chan string)
 
-	var sinkd <-chan string = sink
-	assert.Error(t, muxer.Do(sinkd, source))
+	var sinkReadOnly <-chan string = sink
+	assert.Error(t, muxer.Do(sinkReadOnly, source))
 }
 
 func TestErrorOnInvalidSink(t *testing.T) {
-	for name, sink := range invalidCases() {
+	for name, invalidSink := range invalidCases() {
 		t.Run(name, func(t *testing.T) {
 			source := make(chan int)
-			assert.Error(t, muxer.Do(sink, source))
+			assert.Error(t, muxer.Do(invalidSink, source))
 		})
 	}
 }
 
 func TestErrorOnInvalidSource(t *testing.T) {
-	for name, source := range invalidCases() {
+	for name, invalidSource := range invalidCases() {
 		t.Run(name, func(t *testing.T) {
 			sink := make(chan int)
 			validSource := make(chan int)
-			assert.Error(t, muxer.Do(sink, validSource, source))
-			assert.Error(t, muxer.Do(sink, source, validSource))
+			assert.Error(t, muxer.Do(sink, validSource, invalidSource))
+			assert.Error(t, muxer.Do(sink, invalidSource, validSource))
 		})
 	}
 }
@@ -219,23 +217,26 @@ func testMux(t *testing.T, tcase TestCase) {
 
 		go func() {
 			for i, v := range tcase.expectedOutputs {
-				inindex := i % len(sources)
-				sources[inindex] <- v
+				srcindex := i % len(sources)
+				sources[srcindex] <- v
 			}
-
 			for _, source := range sources {
 				close(source)
 			}
 		}()
 
-		for _, want := range tcase.expectedOutputs {
-			got := <-sink
-			assert.EqualInts(t, want, got)
+		gotOutputs := []int{}
+		for got := range sink {
+			gotOutputs = append(gotOutputs, got)
 		}
 
-		v, ok := <-sink
-		if ok {
-			t.Fatalf("expected sink to be closed, got val[%d]", v)
+		if len(gotOutputs) != len(tcase.expectedOutputs) {
+			t.Fatalf("got %v != want %v", gotOutputs, tcase.expectedOutputs)
+		}
+
+		for i, want := range tcase.expectedOutputs {
+			got := gotOutputs[i]
+			assert.EqualInts(t, want, got)
 		}
 	})
 }
