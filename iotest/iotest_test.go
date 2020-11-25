@@ -2,6 +2,7 @@ package iotest_test
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"testing"
 
@@ -66,21 +67,17 @@ func TestRepeatReader(t *testing.T) {
 }
 
 func TestRepeatReaderNonEOFErr(t *testing.T) {
-	repeater := iotest.NewRepeater(iotest.BrokenReader{}, 666)
+	want := errors.New("TestRepeatReaderNonEOFErr")
+	repeater := iotest.NewRepeater(iotest.BrokenReader{Err: want}, 666)
 	data := make([]byte, 10)
 
-	n, err := repeater.Read(data)
-	if n != 0 {
-		t.Errorf("got n=%d; want=0", n)
-	}
-	if err == nil {
-		t.Error("got nil error; want non-nil error")
-	}
-	n, err2 := repeater.Read(data)
-	if n != 0 {
-		t.Errorf("got n=%d; want=0", n)
-	}
-	if err != err2 {
-		t.Errorf("got error: %v; want error: %v", err2, err)
+	for i := 0; i < 10; i++ {
+		n, err := repeater.Read(data)
+		if n != 0 {
+			t.Errorf("got n=%d; want=0", n)
+		}
+		if err != want {
+			t.Errorf("got %v; want %v", err, want)
+		}
 	}
 }
