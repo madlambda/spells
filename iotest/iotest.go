@@ -8,6 +8,9 @@ import "io"
 // RepeaterReader is an io.Reader that repeats a given io.Reader
 type RepeaterReader struct {
 	reader      io.Reader
+	readData    []byte
+	readIndex   int
+	err         error
 	repeatCount uint
 }
 
@@ -23,5 +26,27 @@ func NewRepeater(r io.Reader, n uint) *RepeaterReader {
 }
 
 func (r *RepeaterReader) Read(d []byte) (int, error) {
-	return r.reader.Read(d)
+	if r.err == nil {
+		n, err := r.reader.Read(d)
+		r.err = err
+		r.readData = append(r.readData, d[:n]...)
+		if err == io.EOF && r.repeatCount > 0 {
+			return n, nil
+		}
+		return n, err
+	}
+	// TODO: handle err is not EOF
+
+	if r.repeatCount == 0 {
+		return 0, r.err
+	}
+
+	n := copy(d, r.readData[r.readIndex:])
+	r.readIndex += n
+
+	if r.readIndex >= len(r.readData) {
+		r.readIndex = 0
+		r.repeatCount -= 1
+	}
+	return n, nil
 }
