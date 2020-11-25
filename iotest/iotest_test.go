@@ -64,3 +64,23 @@ func TestRepeatReader(t *testing.T) {
 		})
 	}
 }
+
+func TestRepeatReaderNonEOFErr(t *testing.T) {
+	repeater := iotest.NewRepeater(iotest.BrokenReader{}, 666)
+	data := make([]byte, 10)
+
+	n, err := repeater.Read(data)
+	if n != 0 {
+		t.Errorf("got n=%d; want=0", n)
+	}
+	if err == nil {
+		t.Error("got nil error; want non-nil error")
+	}
+	n, err2 := repeater.Read(data)
+	if n != 0 {
+		t.Errorf("got n=%d; want=0", n)
+	}
+	if err != err2 {
+		t.Errorf("got error: %v; want error: %v", err2, err)
+	}
+}
