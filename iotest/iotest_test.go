@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	stdiotest "testing/iotest"
+
 	"github.com/madlambda/spells/iotest"
 )
 
@@ -43,6 +45,12 @@ func TestRepeatReader(t *testing.T) {
 			repeat: 1,
 			want:   []byte("tt"),
 		},
+		{
+			name:   "RepeatEmpty",
+			data:   []byte{},
+			repeat: 1,
+			want:   []byte{},
+		},
 	}
 
 	for _, test := range tests {
@@ -55,15 +63,21 @@ func TestRepeatReader(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			// WHY: we usually test with text
-			gotstr := string(got)
-			wantstr := string(test.want)
-
-			if gotstr != wantstr {
-				t.Fatalf("got %q; want %q", gotstr, wantstr)
-			}
+			assertEqualText(t, got, test.want)
 		})
 	}
+}
+
+func TestRepeatReaderOneByteReading(t *testing.T) {
+	inputData := []byte("byteperbyte")
+	want := append(inputData, inputData...)
+	repeater := iotest.NewRepeater(bytes.NewBuffer(inputData), 1)
+
+	got, err := ioutil.ReadAll(stdiotest.OneByteReader(repeater))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertEqualText(t, got, want)
 }
 
 func TestRepeatReaderNonEOFErr(t *testing.T) {
@@ -79,5 +93,16 @@ func TestRepeatReaderNonEOFErr(t *testing.T) {
 		if err != want {
 			t.Errorf("got %v; want %v", err, want)
 		}
+	}
+}
+
+func assertEqualText(t *testing.T, got []byte, want []byte) {
+	t.Helper()
+
+	// WHY: we usually test with text
+	gotstr := string(got)
+	wantstr := string(want)
+	if gotstr != wantstr {
+		t.Errorf("got %q; want %q", gotstr, wantstr)
 	}
 }
