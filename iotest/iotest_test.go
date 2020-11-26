@@ -69,7 +69,19 @@ func TestRepeatReader(t *testing.T) {
 	}
 }
 
-func TestRepeatReaderCornerCases(t *testing.T) {
+func TestRepeatReaderReadBytePerByte(t *testing.T) {
+	inputData := []byte("bytePerByte")
+	want := append(inputData, inputData...)
+	repeater := iotest.NewRepeater(bytes.NewBuffer(inputData), 1)
+
+	got, err := ioutil.ReadAll(stdiotest.OneByteReader(repeater))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertEqualText(t, got, want)
+}
+
+func TestRepeatReaderCornerCasesOnUnderlyingReader(t *testing.T) {
 	scenarios := map[string]func(io.Reader) io.Reader{
 		"SingleByteReading": stdiotest.OneByteReader,
 		"EOFWithData":       stdiotest.DataErrReader,
@@ -79,9 +91,9 @@ func TestRepeatReaderCornerCases(t *testing.T) {
 		t.Run(testname, func(t *testing.T) {
 			inputData := []byte("cornercases")
 			want := append(inputData, inputData...)
-			repeater := iotest.NewRepeater(bytes.NewBuffer(inputData), 1)
+			repeater := iotest.NewRepeater(newReader(bytes.NewBuffer(inputData)), 1)
 
-			got, err := ioutil.ReadAll(newReader(repeater))
+			got, err := ioutil.ReadAll(repeater)
 			if err != nil {
 				t.Fatal(err)
 			}
