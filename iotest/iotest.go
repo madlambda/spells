@@ -9,6 +9,7 @@ import (
 )
 
 // RepeaterReader is an io.Reader that repeats a given io.Reader
+// It is NOT safe to use a RepeaterReader concurrently.
 type RepeaterReader struct {
 	reader      io.Reader
 	readData    []byte
@@ -18,6 +19,7 @@ type RepeaterReader struct {
 }
 
 // BrokenReader is an io.Reader that always fails
+// It is safe to use a BrokenReader concurrently.
 type BrokenReader struct {
 	// Err is the error you want to inject on Read calls.
 	// If it is nil a default error is going to be returned on the Read call.
@@ -28,6 +30,12 @@ type BrokenReader struct {
 // given reader "n" times. If n=0 it won't repeat it and will only
 // provide the contents of the given reader once. If n=1 it will repeat
 // once, duplicating the input.
+//
+// It will use O(N) memory where N is the size of the contents read from
+// the given reader (all contents are kept in memory and looped over).
+//
+// It can be a cheap way to generate gigantic inputs by repeating a very
+// small input.
 func NewRepeater(r io.Reader, n uint) *RepeaterReader {
 	return &RepeaterReader{
 		reader:      r,
