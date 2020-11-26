@@ -3,6 +3,7 @@ package iotest_test
 import (
 	"bytes"
 	"errors"
+	"io"
 	"io/ioutil"
 	"testing"
 
@@ -68,16 +69,25 @@ func TestRepeatReader(t *testing.T) {
 	}
 }
 
-func TestRepeatReaderOneByteReading(t *testing.T) {
-	inputData := []byte("byteperbyte")
-	want := append(inputData, inputData...)
-	repeater := iotest.NewRepeater(bytes.NewBuffer(inputData), 1)
-
-	got, err := ioutil.ReadAll(stdiotest.OneByteReader(repeater))
-	if err != nil {
-		t.Fatal(err)
+func TestRepeatReaderCornerCases(t *testing.T) {
+	scenarios := map[string]func(io.Reader) io.Reader{
+		"SingleByteReading": stdiotest.OneByteReader,
+		"EOFWithData":       stdiotest.DataErrReader,
 	}
-	assertEqualText(t, got, want)
+
+	for testname, newReader := range scenarios {
+		t.Run(testname, func(t *testing.T) {
+			inputData := []byte("cornercases")
+			want := append(inputData, inputData...)
+			repeater := iotest.NewRepeater(bytes.NewBuffer(inputData), 1)
+
+			got, err := ioutil.ReadAll(newReader(repeater))
+			if err != nil {
+				t.Fatal(err)
+			}
+			assertEqualText(t, got, want)
+		})
+	}
 }
 
 func TestRepeatReaderNonEOFErr(t *testing.T) {
