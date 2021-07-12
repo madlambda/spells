@@ -104,7 +104,7 @@ func TestRepeatReaderCornerCasesOnUnderlyingReader(t *testing.T) {
 
 func TestRepeatReaderNonEOFErr(t *testing.T) {
 	want := errors.New("TestRepeatReaderNonEOFErr")
-	repeater := iotest.NewRepeater(iotest.BrokenReader{Err: want}, 666)
+	repeater := iotest.NewRepeater(stdiotest.ErrReader(want), 666)
 	data := make([]byte, 10)
 
 	for i := 0; i < 10; i++ {

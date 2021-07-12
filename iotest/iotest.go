@@ -4,7 +4,6 @@
 package iotest
 
 import (
-	"errors"
 	"io"
 )
 
@@ -16,14 +15,6 @@ type RepeaterReader struct {
 	readIndex   int
 	err         error
 	repeatCount uint
-}
-
-// BrokenReader is an io.Reader that always fails
-// It is safe to use a BrokenReader concurrently.
-type BrokenReader struct {
-	// Err is the error you want to inject on Read calls.
-	// If it is nil a default error is going to be returned on the Read call.
-	Err error
 }
 
 // NewRepeater creates RepeaterReader that will repeat the
@@ -70,11 +61,4 @@ func (r *RepeaterReader) Read(d []byte) (int, error) {
 		r.repeatCount -= 1
 	}
 	return n, nil
-}
-
-func (r BrokenReader) Read(d []byte) (int, error) {
-	if r.Err == nil {
-		r.Err = errors.New("BrokenReaderError")
-	}
-	return 0, r.Err
 }
