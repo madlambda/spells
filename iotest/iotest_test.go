@@ -17,7 +17,7 @@ func TestRepeatReader(t *testing.T) {
 	type Test struct {
 		name   string
 		data   []byte
-		repeat uint
+		repeat int
 		want   []byte
 	}
 

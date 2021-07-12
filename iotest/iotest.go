@@ -14,7 +14,7 @@ type RepeaterReader struct {
 	readData    []byte
 	readIndex   int
 	err         error
-	repeatCount uint
+	repeatCount int
 }
 
 // NewRepeater creates RepeaterReader that will repeat the
@@ -27,7 +27,7 @@ type RepeaterReader struct {
 //
 // It can be a cheap way to generate gigantic inputs by repeating a very
 // small input.
-func NewRepeater(r io.Reader, n uint) *RepeaterReader {
+func NewRepeater(r io.Reader, n int) *RepeaterReader {
 	return &RepeaterReader{
 		reader:      r,
 		repeatCount: n,
