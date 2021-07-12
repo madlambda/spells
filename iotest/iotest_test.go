@@ -12,6 +12,14 @@ import (
 	"github.com/madlambda/spells/iotest"
 )
 
+// TODO: Test behavior with negative indexes
+// Behavior could be:
+// - Just once, as 0
+// - Repeat forever...which may be useful and is not unheard off: https://pkg.go.dev/strings#SplitAfterN
+// - Panic, like: https://pkg.go.dev/strings#Repeat
+//
+// Overall, maybe it is best to keep same behavior as strings.Repeat (0 = none, 1 = repeat once).
+
 func TestRepeatReader(t *testing.T) {
 
 	type Test struct {
@@ -57,7 +65,7 @@ func TestRepeatReader(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			input := bytes.NewBuffer(test.data)
-			repeater := iotest.NewRepeater(input, test.repeat)
+			repeater := iotest.NewRepeatReader(input, test.repeat)
 
 			got, err := ioutil.ReadAll(repeater)
 			if err != nil {
@@ -72,7 +80,7 @@ func TestRepeatReader(t *testing.T) {
 func TestRepeatReaderReadBytePerByte(t *testing.T) {
 	inputData := []byte("bytePerByte")
 	want := append(inputData, inputData...)
-	repeater := iotest.NewRepeater(bytes.NewBuffer(inputData), 1)
+	repeater := iotest.NewRepeatReader(bytes.NewBuffer(inputData), 1)
 
 	got, err := ioutil.ReadAll(stdiotest.OneByteReader(repeater))
 	if err != nil {
@@ -91,7 +99,7 @@ func TestRepeatReaderCornerCasesOnUnderlyingReader(t *testing.T) {
 		t.Run(testname, func(t *testing.T) {
 			inputData := []byte("cornercases")
 			want := append(inputData, inputData...)
-			repeater := iotest.NewRepeater(newReader(bytes.NewBuffer(inputData)), 1)
+			repeater := iotest.NewRepeatReader(newReader(bytes.NewBuffer(inputData)), 1)
 
 			got, err := ioutil.ReadAll(repeater)
 			if err != nil {
@@ -104,7 +112,7 @@ func TestRepeatReaderCornerCasesOnUnderlyingReader(t *testing.T) {
 
 func TestRepeatReaderNonEOFErr(t *testing.T) {
 	want := errors.New("TestRepeatReaderNonEOFErr")
-	repeater := iotest.NewRepeater(stdiotest.ErrReader(want), 666)
+	repeater := iotest.NewRepeatReader(stdiotest.ErrReader(want), 666)
 	data := make([]byte, 10)
 
 	for i := 0; i < 10; i++ {

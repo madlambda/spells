@@ -7,9 +7,9 @@ import (
 	"io"
 )
 
-// RepeaterReader is an io.Reader that repeats a given io.Reader
-// It is NOT safe to use a RepeaterReader concurrently.
-type RepeaterReader struct {
+// RepeatReader is an io.Reader that repeats a given io.Reader
+// It is NOT safe to use a RepeatReader concurrently.
+type RepeatReader struct {
 	reader      io.Reader
 	readData    []byte
 	readIndex   int
@@ -17,7 +17,7 @@ type RepeaterReader struct {
 	repeatCount int
 }
 
-// NewRepeater creates RepeaterReader that will repeat the
+// NewRepeatReader creates RepeatReader that will repeat the
 // given reader "n" times. If n=0 it won't repeat it and will only
 // provide the contents of the given reader once. If n=1 it will repeat
 // once, duplicating the input.
@@ -27,14 +27,14 @@ type RepeaterReader struct {
 //
 // It can be a cheap way to generate gigantic inputs by repeating a very
 // small input.
-func NewRepeater(r io.Reader, n int) *RepeaterReader {
-	return &RepeaterReader{
+func NewRepeatReader(r io.Reader, n int) *RepeatReader {
+	return &RepeatReader{
 		reader:      r,
 		repeatCount: n,
 	}
 }
 
-func (r *RepeaterReader) Read(d []byte) (int, error) {
+func (r *RepeatReader) Read(d []byte) (int, error) {
 	if r.err == nil {
 		n, err := r.reader.Read(d)
 		r.err = err
