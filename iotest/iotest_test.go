@@ -18,7 +18,7 @@ import (
 // - Repeat forever...which may be useful and is not unheard off: https://pkg.go.dev/strings#SplitAfterN
 // - Panic, like: https://pkg.go.dev/strings#Repeat
 //
-// Overall, maybe it is best to keep same behavior as strings.Repeat (0 = none, 1 = repeat once).
+// Overall, maybe it is best to keep same behavior as strings.Repeat (-1 = panic, 0 = none, 1 = repeat once).
 
 func TestRepeatReader(t *testing.T) {
 
