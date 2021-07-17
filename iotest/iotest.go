@@ -4,7 +4,6 @@
 package iotest
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -48,7 +47,6 @@ func (r *RepeatReader) Read(d []byte) (int, error) {
 		r.err = err
 		r.readData = append(r.readData, d[:n]...)
 
-		fmt.Println(err)
 		if err == io.EOF {
 			r.repeatCount -= 1
 			return n, nil
