@@ -14,9 +14,9 @@ fmt:
 bench:
 	go test -bench=. ./...
 
-bench/%:
-	mkdir -p profilling
-	go test -bench=. -memprofile="profilling/${*}-memory.p" "./${*}"
+bench/memory/%:
+	@mkdir -p profilling
+	go test -bench=. -benchmem -memprofile="profilling/${*}-memory.p" "./${*}"
 
 lint:
 	@docker run --rm -v `pwd`:/app -w /app golangci/golangci-lint:v$(golangci_lint_version)  golangci-lint run ./...
