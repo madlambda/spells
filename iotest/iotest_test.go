@@ -12,8 +12,6 @@ import (
 	"github.com/madlambda/spells/iotest"
 )
 
-// TODO: Test behavior with negative indexes
-
 func TestRepeatReader(t *testing.T) {
 
 	type Test struct {
@@ -68,6 +66,24 @@ func TestRepeatReader(t *testing.T) {
 
 			assertEqualText(t, got, test.want)
 		})
+	}
+}
+
+func TestPanicOnNegativeCount(t *testing.T) {
+	var panicErr interface{}
+	defer func() {
+		panicErr = recover()
+	}()
+
+	iotest.NewRepeatReader(bytes.NewBuffer([]byte("test")), -1)
+
+	if panicErr == nil {
+		t.Fatal("wanted panic, got nothing")
+	}
+
+	err := panicErr.(error)
+	if !errors.Is(err, iotest.RepeatReaderInvalidCount) {
+		t.Errorf("want '%v' got '%v'", iotest.RepeatReaderInvalidCount, err)
 	}
 }
 

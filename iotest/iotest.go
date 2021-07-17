@@ -4,6 +4,7 @@
 package iotest
 
 import (
+	"fmt"
 	"io"
 )
 
@@ -16,6 +17,15 @@ type RepeatReader struct {
 	err         error
 	repeatCount int
 }
+
+// RepeatReaderError is an enumeration of errors that are part of
+// RepeatReader interface. The sentinel errors are wrapped
+// with dynamic context, so always check using errors.Is.
+type RepeatReaderError string
+
+const (
+	RepeatReaderInvalidCount RepeatReaderError = "Repeat reader count must be >= 0"
+)
 
 // NewRepeatReader creates RepeatReader that will repeat the
 // given io.Reader "n" times.
@@ -32,6 +42,9 @@ type RepeatReader struct {
 //
 // It is a severe programming error to pass a negative count, resulting in a panic.
 func NewRepeatReader(r io.Reader, n int) *RepeatReader {
+	if n < 0 {
+		panic(fmt.Errorf("%w : count is %d", RepeatReaderInvalidCount, n))
+	}
 	return &RepeatReader{
 		reader:      r,
 		repeatCount: n,
@@ -70,4 +83,8 @@ func (r *RepeatReader) Read(d []byte) (int, error) {
 		r.repeatCount -= 1
 	}
 	return n, nil
+}
+
+func (r RepeatReaderError) Error() string {
+	return string(r)
 }
