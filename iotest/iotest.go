@@ -18,15 +18,19 @@ type RepeatReader struct {
 }
 
 // NewRepeatReader creates RepeatReader that will repeat the
-// given reader "n" times. If n=0 it won't repeat it and will only
-// provide the contents of the given reader once. If n=1 it will repeat
-// once, duplicating the input.
+// given io.Reader "n" times.
+//
+// If n=0 it won't provide any data and will return an io.EOF immediately (empty stream).
+// If n=1 it will repeat once, just like reading the original stream.
+// If n=2 it will repeat the underlying stream twice, doubling it.
 //
 // It will use O(N) memory where N is the size of the contents read from
 // the given reader (all contents are kept in memory and looped over).
 //
 // It can be a cheap way to generate gigantic inputs by repeating a very
-// small input.
+// small input (it will only use O(N) where N= small input size).
+//
+// It is a severe programming error to pass a negative count, resulting in a panic.
 func NewRepeatReader(r io.Reader, n int) *RepeatReader {
 	return &RepeatReader{
 		reader:      r,
