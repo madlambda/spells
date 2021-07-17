@@ -12,23 +12,23 @@ import (
 // different times and check that memory usage is constant (O(1))
 // regarding N (for N = amount of repetitions).
 
-func BenchmarkRepeat1(b *testing.B) {
+func BenchmarkRepeatReader1(b *testing.B) {
 	benchmarkRepeatReader(b, newInput(), 1)
 }
 
-func BenchmarkRepeat10(b *testing.B) {
+func BenchmarkRepeatReader10(b *testing.B) {
 	benchmarkRepeatReader(b, newInput(), 10)
 }
 
-func BenchmarkRepeat100(b *testing.B) {
+func BenchmarkRepeatReader100(b *testing.B) {
 	benchmarkRepeatReader(b, newInput(), 100)
 }
 
-func BenchmarkRepeat1000(b *testing.B) {
+func BenchmarkRepeatReader1000(b *testing.B) {
 	benchmarkRepeatReader(b, newInput(), 1000)
 }
 
-func BenchmarkRepeat10000(b *testing.B) {
+func BenchmarkRepeatReader10000(b *testing.B) {
 	benchmarkRepeatReader(b, newInput(), 10000)
 }
 
