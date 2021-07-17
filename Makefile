@@ -3,7 +3,10 @@ golangci_lint_version=1.21.0
 all: analysis test
 
 test:
-	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	go test -race -timeout 10s -coverprofile=coverage.txt -covermode=atomic ./...
+
+test/%:
+	go test -race -timeout 10s -coverprofile=coverage.txt -covermode=atomic -run="${*}" ./...
 
 fmt:
 	gofmt -s -w .

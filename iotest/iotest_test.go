@@ -13,12 +13,6 @@ import (
 )
 
 // TODO: Test behavior with negative indexes
-// Behavior could be:
-// - Just once, as 0
-// - Repeat forever...which may be useful and is not unheard off: https://pkg.go.dev/strings#SplitAfterN
-// - Panic, like: https://pkg.go.dev/strings#Repeat
-//
-// Overall, maybe it is best to keep same behavior as strings.Repeat (-1 = panic, 0 = none, 1 = repeat once).
 
 func TestRepeatReader(t *testing.T) {
 
@@ -34,30 +28,30 @@ func TestRepeatReader(t *testing.T) {
 			name:   "NoRepeat",
 			data:   []byte("test"),
 			repeat: 0,
-			want:   []byte("test"),
+			want:   []byte{},
 		},
 		{
 			name:   "RepeatOnce",
 			data:   []byte("test"),
 			repeat: 1,
-			want:   []byte("testtest"),
+			want:   []byte("test"),
 		},
 		{
 			name:   "RepeatTwice",
 			data:   []byte("test"),
 			repeat: 2,
-			want:   []byte("testtesttest"),
+			want:   []byte("testtest"),
 		},
 		{
 			name:   "RepeatSingleByte",
 			data:   []byte("t"),
-			repeat: 1,
+			repeat: 2,
 			want:   []byte("tt"),
 		},
 		{
 			name:   "RepeatEmpty",
 			data:   []byte{},
-			repeat: 1,
+			repeat: 2,
 			want:   []byte{},
 		},
 	}
@@ -77,18 +71,6 @@ func TestRepeatReader(t *testing.T) {
 	}
 }
 
-func TestRepeatReaderReadBytePerByte(t *testing.T) {
-	inputData := []byte("bytePerByte")
-	want := append(inputData, inputData...)
-	repeater := iotest.NewRepeatReader(bytes.NewBuffer(inputData), 1)
-
-	got, err := ioutil.ReadAll(stdiotest.OneByteReader(repeater))
-	if err != nil {
-		t.Fatal(err)
-	}
-	assertEqualText(t, got, want)
-}
-
 func TestRepeatReaderCornerCasesOnUnderlyingReader(t *testing.T) {
 	scenarios := map[string]func(io.Reader) io.Reader{
 		"SingleByteReading": stdiotest.OneByteReader,
@@ -99,7 +81,7 @@ func TestRepeatReaderCornerCasesOnUnderlyingReader(t *testing.T) {
 		t.Run(testname, func(t *testing.T) {
 			inputData := []byte("cornercases")
 			want := append(inputData, inputData...)
-			repeater := iotest.NewRepeatReader(newReader(bytes.NewBuffer(inputData)), 1)
+			repeater := iotest.NewRepeatReader(newReader(bytes.NewBuffer(inputData)), 2)
 
 			got, err := ioutil.ReadAll(repeater)
 			if err != nil {
@@ -116,6 +98,7 @@ func TestRepeatReaderNonEOFErr(t *testing.T) {
 	data := make([]byte, 10)
 
 	for i := 0; i < 10; i++ {
+		// Calling Read after an error should return always the first error
 		n, err := repeater.Read(data)
 		if n != 0 {
 			t.Errorf("got n=%d; want=0", n)
