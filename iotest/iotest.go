@@ -24,7 +24,7 @@ type RepeatReader struct {
 type RepeatReaderError string
 
 const (
-	RepeatReaderInvalidCount RepeatReaderError = "Repeat reader count must be >= 0"
+	RepeatReaderInvalidCountErr RepeatReaderError = "Repeat reader count must be >= 0"
 )
 
 // NewRepeatReader creates RepeatReader that will repeat the
@@ -43,7 +43,7 @@ const (
 // It is a severe programming error to pass a negative count, resulting in a panic.
 func NewRepeatReader(r io.Reader, n int) *RepeatReader {
 	if n < 0 {
-		panic(fmt.Errorf("%w : count is %d", RepeatReaderInvalidCount, n))
+		panic(fmt.Errorf("%w : count is %d", RepeatReaderInvalidCountErr, n))
 	}
 	return &RepeatReader{
 		reader:      r,
@@ -51,6 +51,8 @@ func NewRepeatReader(r io.Reader, n int) *RepeatReader {
 	}
 }
 
+// Read implements the same behavior of the underlying io.Reader + repeating
+// semantics.
 func (r *RepeatReader) Read(d []byte) (int, error) {
 	if r.repeatCount == 0 {
 		if r.err == nil {

@@ -82,8 +82,8 @@ func TestPanicOnNegativeCount(t *testing.T) {
 	}
 
 	err := panicErr.(error)
-	if !errors.Is(err, iotest.RepeatReaderInvalidCount) {
-		t.Errorf("want '%v' got '%v'", iotest.RepeatReaderInvalidCount, err)
+	if !errors.Is(err, iotest.RepeatReaderInvalidCountErr) {
+		t.Errorf("want '%v' got '%v'", iotest.RepeatReaderInvalidCountErr, err)
 	}
 }
 
