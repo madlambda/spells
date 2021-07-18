@@ -55,10 +55,7 @@ func NewRepeatReader(r io.Reader, n int) *RepeatReader {
 // semantics.
 func (r *RepeatReader) Read(d []byte) (int, error) {
 	if r.repeatCount == 0 {
-		if r.err == nil {
-			r.err = io.EOF
-		}
-		return 0, r.err
+		return 0, io.EOF
 	}
 
 	if r.err == nil {
