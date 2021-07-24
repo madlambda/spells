@@ -12,7 +12,7 @@ fmt:
 	gofmt -s -w .
 
 bench:
-	go test -bench=. ./...
+	go test -bench=. -benchmem ./...
 
 bench/memory/%:
 	@mkdir -p profilling
