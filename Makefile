@@ -1,4 +1,4 @@
-golangci_lint_version=1.21.0
+golangci_lint_version=1.41.1
 
 all: analysis test
 
