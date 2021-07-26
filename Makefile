@@ -1,4 +1,4 @@
-golangci_lint_version=1.21.0
+golangci_lint_version=1.41.1
 
 all: analysis test
 
@@ -12,7 +12,7 @@ fmt:
 	gofmt -s -w .
 
 bench:
-	go test -bench=. ./...
+	go test -bench=. -benchmem ./...
 
 bench/memory/%:
 	@mkdir -p profilling
