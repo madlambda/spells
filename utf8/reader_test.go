@@ -63,10 +63,43 @@ func TestUTF8Reader(t *testing.T) {
 		},
 	}
 
+	// test NewReaderReader
 	for _, tc := range testcases {
 		reader := utf8.NewReaderReader(iotest.NewRepeatReader(
 			bytes.NewBuffer([]byte(tc.input)),
 			tc.repeat))
+
+		got, err := utf8.ReadAll(reader)
+		assert.NoError(t, err, "reading utf8 reader")
+
+		repeater := iotest.NewRepeatReader(bytes.NewBuffer([]byte(tc.input)),
+			tc.repeat)
+
+		expectedBytes, err := io.ReadAll(repeater)
+		assert.NoError(t, err, "repeating expected")
+
+		expected := []rune(string(expectedBytes))
+
+		assert.EqualErrs(t, tc.err, err, "Read() error")
+		assert.EqualInts(t, len(expected), len(got), "rune slice size mismatch")
+
+		for i, r := range expected {
+			if r != got[i] {
+				t.Errorf("want[%c] but got[%c]", r, got[i])
+			}
+		}
+	}
+
+	// test NewReader
+	for _, tc := range testcases {
+		inputReader := iotest.NewRepeatReader(
+			bytes.NewBuffer([]byte(tc.input)),
+			tc.repeat)
+
+		data, err := io.ReadAll(inputReader)
+		assert.NoError(t, err, "reading repeated string")
+
+		reader := utf8.NewReader(bytes.NewBuffer(data))
 
 		got, err := utf8.ReadAll(reader)
 		assert.NoError(t, err, "reading utf8 reader")
