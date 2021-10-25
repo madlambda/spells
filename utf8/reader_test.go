@@ -93,9 +93,13 @@ func TestUTF8Reader(t *testing.T) {
 }
 
 func TestUTF8ReaderMultipleSizes(t *testing.T) {
-	for i := 0; i < 1000; i++ {
-		buf1 := bytes.NewBuffer([]byte(expectedString))
-		buf2 := bytes.NewBuffer([]byte(expectedString))
+	input := iotest.NewRepeatReader(bytes.NewBuffer([]byte(expectedString)), 100)
+	inputBytes, err := io.ReadAll(input)
+	assert.NoError(t, err, "failed to repeat input")
+
+	for i := 0; i < 10; i++ {
+		buf1 := bytes.NewBuffer(inputBytes)
+		buf2 := bytes.NewBuffer(inputBytes)
 		repeater1 := iotest.NewRepeatReader(buf1, i)
 		repeater2 := iotest.NewRepeatReader(buf2, i)
 
@@ -119,9 +123,13 @@ func TestUTF8ReaderMultipleSizes(t *testing.T) {
 }
 
 func TestUTF8ReaderHalfRead(t *testing.T) {
-	for i := 0; i < 1000; i++ {
-		buf1 := bytes.NewBuffer([]byte(expectedString))
-		buf2 := bytes.NewBuffer([]byte(expectedString))
+	input := iotest.NewRepeatReader(bytes.NewBuffer([]byte(expectedString)), 100)
+	inputBytes, err := io.ReadAll(input)
+	assert.NoError(t, err, "failed to repeat input")
+
+	for i := 0; i < 10; i++ {
+		buf1 := bytes.NewBuffer(inputBytes)
+		buf2 := bytes.NewBuffer(inputBytes)
 		repeater1 := stdiotest.HalfReader(iotest.NewRepeatReader(buf1, i))
 		repeater2 := iotest.NewRepeatReader(buf2, i)
 
@@ -145,7 +153,6 @@ func TestUTF8ReaderHalfRead(t *testing.T) {
 }
 
 func TestUTF8ReaderFromFileMultipleBufferSizes(t *testing.T) {
-
 	expectedRunes := []rune(expectedString)
 	expectedLen := len(expectedRunes)
 
