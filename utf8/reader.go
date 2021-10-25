@@ -56,14 +56,11 @@ func (rr *ReaderReader) Read(data []rune) (int, error) {
 		}
 
 		begin := len(b)
-
 		n, err := rr.r.Read(b[begin:end])
-
 		b = b[:len(b)+n]
 
 		if n > 0 {
 			count := lastPartialCount(b[start : begin+n])
-
 			for start+count < begin+n {
 				r, size := utf8.DecodeRune(b[start : begin+n])
 				if r == utf8.RuneError {
