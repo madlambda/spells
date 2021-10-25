@@ -93,7 +93,7 @@ func TestUTF8Reader(t *testing.T) {
 }
 
 func TestUTF8ReaderMultipleSizes(t *testing.T) {
-	for i := 0; i < 2000; i++ {
+	for i := 0; i < 1000; i++ {
 		buf1 := bytes.NewBuffer([]byte(expectedString))
 		buf2 := bytes.NewBuffer([]byte(expectedString))
 		repeater1 := iotest.NewRepeatReader(buf1, i)
@@ -119,7 +119,7 @@ func TestUTF8ReaderMultipleSizes(t *testing.T) {
 }
 
 func TestUTF8ReaderHalfRead(t *testing.T) {
-	for i := 0; i < 2000; i++ {
+	for i := 0; i < 1000; i++ {
 		buf1 := bytes.NewBuffer([]byte(expectedString))
 		buf2 := bytes.NewBuffer([]byte(expectedString))
 		repeater1 := stdiotest.HalfReader(iotest.NewRepeatReader(buf1, i))
