@@ -85,6 +85,8 @@ func (rr *ReaderReader) Read(data []rune) (int, error) {
 	return nrunes, nil
 }
 
+// lastPartialCount count how many bytes of partial runes are in the end of the
+// input slice. In the worst case it iterates a maximum of 4 times (utf8.UTF8Max).
 func lastPartialCount(p []byte) int {
 	// Look for final start of rune.
 	for i := 0; i < len(p) && i < utf8.UTFMax; {
