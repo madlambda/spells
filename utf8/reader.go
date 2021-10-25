@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	reader struct {
+	RuneReader struct {
 		r io.RuneReader
 	}
 
@@ -19,25 +19,6 @@ type (
 		Read(data []rune) (int, error)
 	}
 )
-
-func NewReader(r io.RuneReader) Reader {
-	return &reader{
-		r: r,
-	}
-}
-
-func (rd *reader) Read(data []rune) (int, error) {
-	for i := 0; i < len(data); i++ {
-		r, _, err := rd.r.ReadRune()
-		if err != nil {
-			return i, err
-		}
-
-		data[i] = r
-	}
-
-	return len(data), nil
-}
 
 // NewReaderReader creates a utf8.Reader implementation from an io.Reader
 // interface.
@@ -121,6 +102,27 @@ func lastPartialCount(p []byte) int {
 	}
 	// Did not find start of final rune - invalid or empty input.
 	return 0
+}
+
+// NewReader implements a utf8.Reader interface from a io.RuneReader interface.
+func NewReader(r io.RuneReader) *RuneReader {
+	return &RuneReader{
+		r: r,
+	}
+}
+
+// Read implements the utf8.Reader interface.
+func (rd *RuneReader) Read(data []rune) (int, error) {
+	for i := 0; i < len(data); i++ {
+		r, _, err := rd.r.ReadRune()
+		if err != nil {
+			return i, err
+		}
+
+		data[i] = r
+	}
+
+	return len(data), nil
 }
 
 // ReadAll reads from r until an error or EOF and returns the data.
