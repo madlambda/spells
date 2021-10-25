@@ -22,6 +22,7 @@ func TestUTF8Reader(t *testing.T) {
 		input  string
 		repeat int
 		err    error
+		errOut []rune
 	}
 
 	testcases := []testcase{
@@ -61,6 +62,12 @@ func TestUTF8Reader(t *testing.T) {
 			input:  "Εν οίδα ότι ουδέν οίδα",
 			repeat: 2049,
 		},
+		{
+			input:  string([]byte{206, 149, 206, 206, 206}),
+			repeat: 1,
+			err:    fmt.Errorf("invalid rune"),
+			errOut: []rune{'Ε'},
+		},
 	}
 
 	// test NewReaderReader
@@ -69,23 +76,28 @@ func TestUTF8Reader(t *testing.T) {
 			bytes.NewBuffer([]byte(tc.input)),
 			tc.repeat))
 
-		got, err := utf8.ReadAll(reader)
-		assert.NoError(t, err, "reading utf8 reader")
+		got, readErr := utf8.ReadAll(reader)
+		assert.EqualErrs(t, tc.err, readErr, "Read() error")
 
-		repeater := iotest.NewRepeatReader(bytes.NewBuffer([]byte(tc.input)),
-			tc.repeat)
+		var expected []rune
 
-		expectedBytes, err := io.ReadAll(repeater)
-		assert.NoError(t, err, "repeating expected")
+		if readErr == nil {
+			repeater := iotest.NewRepeatReader(bytes.NewBuffer([]byte(tc.input)),
+				tc.repeat)
 
-		expected := []rune(string(expectedBytes))
+			expectedBytes, err := io.ReadAll(repeater)
+			assert.NoError(t, err, "repeating expected")
 
-		assert.EqualErrs(t, tc.err, err, "Read() error")
-		assert.EqualInts(t, len(expected), len(got), "rune slice size mismatch")
+			expected = []rune(string(expectedBytes))
+		} else {
+			expected = tc.errOut
+		}
+
+		assert.EqualInts(t, len(expected), len(got), "rune slice len mismatch: %s", string(got))
 
 		for i, r := range expected {
 			if r != got[i] {
-				t.Errorf("want[%c] but got[%c]", r, got[i])
+				t.Errorf("want[%d = %c] but got[%d = %c]", r, r, got[i], got[i])
 			}
 		}
 	}
@@ -101,23 +113,28 @@ func TestUTF8Reader(t *testing.T) {
 
 		reader := utf8.NewReader(bytes.NewBuffer(data))
 
-		got, err := utf8.ReadAll(reader)
-		assert.NoError(t, err, "reading utf8 reader")
+		got, readErr := utf8.ReadAll(reader)
+		assert.EqualErrs(t, tc.err, readErr, "read() error")
 
-		repeater := iotest.NewRepeatReader(bytes.NewBuffer([]byte(tc.input)),
-			tc.repeat)
+		var expected []rune
 
-		expectedBytes, err := io.ReadAll(repeater)
-		assert.NoError(t, err, "repeating expected")
+		if readErr == nil {
+			repeater := iotest.NewRepeatReader(bytes.NewBuffer([]byte(tc.input)),
+				tc.repeat)
 
-		expected := []rune(string(expectedBytes))
+			expectedBytes, err := io.ReadAll(repeater)
+			assert.NoError(t, err, "repeating expected")
 
-		assert.EqualErrs(t, tc.err, err, "Read() error")
-		assert.EqualInts(t, len(expected), len(got), "rune slice size mismatch")
+			expected = []rune(string(expectedBytes))
+		} else {
+			expected = tc.errOut
+		}
+
+		assert.EqualInts(t, len(expected), len(got), "rune slice len mismatch")
 
 		for i, r := range expected {
 			if r != got[i] {
-				t.Errorf("want[%c] but got[%c]", r, got[i])
+				t.Errorf("want[%d = %c] but got[%d = %c]", r, r, got[i], got[i])
 			}
 		}
 	}

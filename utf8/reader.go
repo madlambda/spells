@@ -118,6 +118,10 @@ func (rd *RuneReader) Read(data []rune) (int, error) {
 			return i, err
 		}
 
+		if r == utf8.RuneError {
+			return i, fmt.Errorf("invalid rune")
+		}
+
 		data[i] = r
 	}
 
