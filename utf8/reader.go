@@ -22,7 +22,7 @@ type (
 
 // NewReaderReader creates a utf8.Reader implementation from an io.Reader
 // interface.
-func NewReaderReader(r io.Reader) Reader {
+func NewReaderReader(r io.Reader) *ReaderReader {
 	return &ReaderReader{
 		r: r,
 	}
