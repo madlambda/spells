@@ -31,6 +31,11 @@ func TestUTF8Reader(t *testing.T) {
 			repeat: 1,
 		},
 		{
+			input:  string([]byte{0x80}),
+			repeat: 1,
+			err:    fmt.Errorf("invalid rune"),
+		},
+		{
 			input:  "test",
 			repeat: 1,
 		},
