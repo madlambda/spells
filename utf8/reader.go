@@ -42,8 +42,8 @@ func NewReaderReader(r io.Reader) Reader {
 // of ASCII data, so allocating len(data)*4 seems to be wasteful.
 func (rr *ReaderReader) Read(data []rune) (int, error) {
 	var (
-		nrunes int
-		start  int
+		nrunes    int
+		runeStart int // decoding starts at this offset
 	)
 
 	end := len(data)
@@ -59,20 +59,24 @@ func (rr *ReaderReader) Read(data []rune) (int, error) {
 		n, err := rr.r.Read(b[begin:end])
 		b = b[:len(b)+n]
 
+		lastRead := begin + n
+
 		if n > 0 {
-			count := lastPartialCount(b[start : begin+n])
-			for start+count < begin+n {
-				r, size := utf8.DecodeRune(b[start : begin+n])
+			count := lastPartialRuneCount(b[runeStart:lastRead])
+
+			// decode all runes until the partial in the end.
+			for runeStart+count < lastRead {
+				r, size := utf8.DecodeRune(b[runeStart:lastRead])
 				if r == utf8.RuneError {
 					return nrunes, fmt.Errorf("invalid rune")
 				}
 
-				start += size
+				runeStart += size
 				data[nrunes] = r
 				nrunes++
 			}
 
-			if start+count == begin+n && len(b) == end {
+			if len(b) == end {
 				end++
 			}
 		}
@@ -85,9 +89,10 @@ func (rr *ReaderReader) Read(data []rune) (int, error) {
 	return nrunes, nil
 }
 
-// lastPartialCount count how many bytes of partial runes are in the end of the
-// input slice. In the worst case it iterates a maximum of 4 times (utf8.UTF8Max).
-func lastPartialCount(p []byte) int {
+// lastPartialRuneCount count how many bytes of a partial rune are in the end of
+// the input slice. In the worst case it iterates a maximum of 4 times
+// (utf8.UTF8Max).
+func lastPartialRuneCount(p []byte) int {
 	// Look for final start of rune.
 	for i := 0; i < len(p) && i < utf8.UTFMax; {
 		i++
