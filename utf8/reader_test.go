@@ -11,6 +11,7 @@ import (
 	stdiotest "testing/iotest"
 
 	"github.com/madlambda/spells/assert"
+	"github.com/madlambda/spells/io/runes"
 	"github.com/madlambda/spells/iotest"
 	"github.com/madlambda/spells/utf8"
 )
@@ -81,7 +82,7 @@ func TestUTF8Reader(t *testing.T) {
 			bytes.NewBuffer([]byte(tc.input)),
 			tc.repeat))
 
-		got, readErr := utf8.ReadAll(reader)
+		got, readErr := runes.ReadAll(reader)
 		assert.EqualErrs(t, tc.err, readErr, "Read() error")
 
 		var expected []rune
@@ -118,7 +119,7 @@ func TestUTF8Reader(t *testing.T) {
 
 		reader := utf8.NewReader(bytes.NewBuffer(data))
 
-		got, readErr := utf8.ReadAll(reader)
+		got, readErr := runes.ReadAll(reader)
 		assert.EqualErrs(t, tc.err, readErr, "read() error")
 
 		var expected []rune
@@ -158,7 +159,7 @@ func TestUTF8ReaderMultipleSizes(t *testing.T) {
 		repeater1 := iotest.NewRepeatReader(buf1, i)
 		repeater2 := iotest.NewRepeatReader(buf2, i)
 
-		runes, err := utf8.ReadAll(utf8.NewReaderReader(repeater1))
+		runes, err := runes.ReadAll(utf8.NewReaderReader(repeater1))
 		assert.NoError(t, err, "reading runes")
 
 		expectedBytes, err := io.ReadAll(repeater2)
@@ -188,7 +189,7 @@ func TestUTF8ReaderHalfRead(t *testing.T) {
 		repeater1 := stdiotest.HalfReader(iotest.NewRepeatReader(buf1, i))
 		repeater2 := iotest.NewRepeatReader(buf2, i)
 
-		runes, err := utf8.ReadAll(utf8.NewReaderReader(repeater1))
+		runes, err := runes.ReadAll(utf8.NewReaderReader(repeater1))
 		assert.NoError(t, err, "reading runes")
 
 		expectedBytes, err := io.ReadAll(repeater2)
@@ -267,7 +268,7 @@ func TestUTF8ReaderOneByteReader(t *testing.T) {
 	repeater1 := stdiotest.HalfReader(iotest.NewRepeatReader(buf1, 100))
 	repeater2 := iotest.NewRepeatReader(buf2, 100)
 
-	runes, err := utf8.ReadAll(utf8.NewReaderReader(repeater1))
+	runes, err := runes.ReadAll(utf8.NewReaderReader(repeater1))
 	assert.NoError(t, err, "reading runes")
 
 	expectedBytes, err := io.ReadAll(repeater2)

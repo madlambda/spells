@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"unicode/utf8"
+
+	"github.com/madlambda/spells/io/bytes"
 )
 
 type (
@@ -11,24 +13,21 @@ type (
 		r io.RuneReader
 	}
 
+	// ReaderReader implements a runes.Reader from a bytes.Reader interface.
 	ReaderReader struct {
-		r io.Reader
-	}
-
-	Reader interface {
-		Read(data []rune) (int, error)
+		r bytes.Reader
 	}
 )
 
-// NewReaderReader creates a utf8.Reader implementation from an io.Reader
+// NewReaderReader creates a runes.Reader implementation from an bytes.Reader
 // interface.
-func NewReaderReader(r io.Reader) *ReaderReader {
+func NewReaderReader(r bytes.Reader) *ReaderReader {
 	return &ReaderReader{
 		r: r,
 	}
 }
 
-// Read implements utf8.Reader interface.
+// Read implements runes.Reader interface.
 //
 // It will use O(N) space where N is the size of the data slice provided.
 // For ASCII data it allocates exactly len(data) bytes (or sizeof(data)/4) but
@@ -108,14 +107,14 @@ func lastPartialRuneCount(p []byte) int {
 	return 0
 }
 
-// NewReader implements a utf8.Reader interface from a io.RuneReader interface.
+// NewReader implements a runes.Reader interface from a io.RuneReader interface.
 func NewReader(r io.RuneReader) *RuneReader {
 	return &RuneReader{
 		r: r,
 	}
 }
 
-// Read implements the utf8.Reader interface.
+// Read implements the runes.Reader interface.
 func (rd *RuneReader) Read(data []rune) (int, error) {
 	for i := 0; i < len(data); i++ {
 		r, _, err := rd.r.ReadRune()
@@ -131,23 +130,4 @@ func (rd *RuneReader) Read(data []rune) (int, error) {
 	}
 
 	return len(data), nil
-}
-
-// ReadAll reads from r until an error or EOF and returns the data.
-func ReadAll(r Reader) ([]rune, error) {
-	b := make([]rune, 0, 512)
-	for {
-		if len(b) == cap(b) {
-			// Add more capacity (let append pick how much).
-			b = append(b, 0)[:len(b)]
-		}
-		n, err := r.Read(b[len(b):cap(b)])
-		b = b[:len(b)+n]
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			return b, err
-		}
-	}
 }
