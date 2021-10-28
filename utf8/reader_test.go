@@ -34,7 +34,7 @@ func TestUTF8Reader(t *testing.T) {
 		{
 			input:  string([]byte{0x80}),
 			repeat: 1,
-			err:    fmt.Errorf("invalid rune"),
+			err:    utf8.ErrDecode,
 		},
 		{
 			input:  "test",
@@ -71,7 +71,7 @@ func TestUTF8Reader(t *testing.T) {
 		{
 			input:  string([]byte{206, 149, 206, 206, 206}),
 			repeat: 1,
-			err:    fmt.Errorf("invalid rune"),
+			err:    utf8.ErrDecode,
 			errOut: []rune{'Ε'},
 		},
 	}
@@ -83,7 +83,7 @@ func TestUTF8Reader(t *testing.T) {
 			tc.repeat))
 
 		got, readErr := runes.ReadAll(reader)
-		assert.EqualErrs(t, tc.err, readErr, "Read() error")
+		assert.IsError(t, tc.err, readErr, "Read() error")
 
 		var expected []rune
 
@@ -99,7 +99,8 @@ func TestUTF8Reader(t *testing.T) {
 			expected = tc.errOut
 		}
 
-		assert.EqualInts(t, len(expected), len(got), "rune slice len mismatch: %s", string(got))
+		assert.EqualInts(t, len(expected), len(got), "rune slice len mismatch: %s",
+			string(got))
 
 		for i, r := range expected {
 			if r != got[i] {
@@ -120,7 +121,7 @@ func TestUTF8Reader(t *testing.T) {
 		reader := utf8.NewReader(bytes.NewBuffer(data))
 
 		got, readErr := runes.ReadAll(reader)
-		assert.EqualErrs(t, tc.err, readErr, "read() error")
+		assert.IsError(t, tc.err, readErr, "read() error")
 
 		var expected []rune
 

@@ -17,7 +17,11 @@ type (
 	ReaderReader struct {
 		r bytes.Reader
 	}
+
+	Error string
 )
+
+const ErrDecode Error = "invalid rune"
 
 // NewReaderReader creates a runes.Reader implementation from an bytes.Reader
 // interface.
@@ -67,7 +71,8 @@ func (rr *ReaderReader) Read(data []rune) (int, error) {
 			for runeStart+count < lastRead {
 				r, size := utf8.DecodeRune(b[runeStart:lastRead])
 				if r == utf8.RuneError {
-					return nrunes, fmt.Errorf("invalid rune")
+					return nrunes, fmt.Errorf("%w (offset %d, byte %d)",
+						ErrDecode, runeStart, b[runeStart])
 				}
 
 				runeStart += size
@@ -116,18 +121,22 @@ func NewReader(r io.RuneReader) *RuneReader {
 
 // Read implements the runes.Reader interface.
 func (rd *RuneReader) Read(data []rune) (int, error) {
+	offset := 0
 	for i := 0; i < len(data); i++ {
-		r, _, err := rd.r.ReadRune()
+		r, size, err := rd.r.ReadRune()
 		if err != nil {
 			return i, err
 		}
-
 		if r == utf8.RuneError {
-			return i, fmt.Errorf("invalid rune")
+			return i, fmt.Errorf("%w at offset %d", ErrDecode, offset)
 		}
-
+		offset += size
 		data[i] = r
 	}
 
 	return len(data), nil
+}
+
+func (e Error) Error() string {
+	return string(e)
 }
