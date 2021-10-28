@@ -2,8 +2,9 @@ package runes
 
 import "io"
 
-// Reader reads Unicode encoded bytes into data. It has the same semantics as
-// io.Reader.
+// Reader reads Unicode encoded bytes into data.
+// For the details about the usage of such readers, see the stdlib io.Reader
+// documentation.
 type Reader interface {
 	Read(data []rune) (int, error)
 }
