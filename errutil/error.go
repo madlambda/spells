@@ -7,8 +7,13 @@
 // - Improved chaining of error sentinels (wrapping multiple errors).
 package errutil
 
+// Error implements the Go's error interface in the simplest
+// way possible, allowing initialization error sentinels to be done
+// at compile time as constants. It does so by using a string
+// as it's base type.
 type Error string
 
+// Error return a string representation of the error.
 func (e Error) Error() string {
 	return string(e)
 }
