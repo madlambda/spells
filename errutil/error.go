@@ -4,7 +4,6 @@
 // Utilities include:
 //
 // - An error type that makes it easy to work with const error sentinels.
-// - Improved chaining of error sentinels (wrapping multiple errors).
 package errutil
 
 // Error implements the Go's error interface in the simplest
