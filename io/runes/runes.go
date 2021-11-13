@@ -6,9 +6,34 @@ import (
 	"unicode"
 )
 
-// Reader reads Unicode encoded bytes into data.
-// For the details about the usage of such readers, see the stdlib io.Reader
-// documentation.
+// Reader is the interface that wraps the basic Read method.
+//
+// Read reads up to len(data) runes into data. It returns the number of runes
+// read (0 <= n <= len(data)) and any error encountered. Even if Read
+// returns n < len(data), it may use all of data as scratch space during the
+// call. If some data is available but not len(data) runes, Read conventionally
+// returns what is available instead of waiting for more.
+//
+// When Read encounters an error or end-of-file condition after
+// successfully reading n > 0 runes, it returns the number of
+// runes read. It may return the (non-nil) error from the same call
+// or return the error (and n == 0) from a subsequent call.
+// An instance of this general case is that a Reader returning
+// a non-zero number of runes at the end of the input stream may
+// return either err == EOF or err == nil. The next Read should
+// return 0, EOF.
+//
+// Callers should always process the n > 0 runes returned before
+// considering the error err. Doing so correctly handles I/O errors
+// that happen after reading some runes and also both of the
+// allowed EOF behaviors.
+//
+// Implementations of Read are discouraged from returning a
+// zero rune count with a nil error, except when len(data) == 0.
+// Callers should treat a return of 0 and nil as indicating that
+// nothing happened; in particular it does not indicate EOF.
+//
+// Implementations must not retain data.
 type Reader interface {
 	Read(data []rune) (int, error)
 }
