@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/madlambda/spells/assert"
@@ -139,7 +140,7 @@ func TestUnicodeDecoder(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			inputReader := iotest.NewRepeatReader(
-				bytes.NewBuffer([]byte(tc.input)),
+				strings.NewReader(tc.input),
 				tc.repeat)
 
 			data, err := io.ReadAll(inputReader)
@@ -153,7 +154,7 @@ func TestUnicodeDecoder(t *testing.T) {
 			var expected []rune
 
 			if tc.want.err == nil {
-				repeater := iotest.NewRepeatReader(bytes.NewBuffer([]byte(tc.input)),
+				repeater := iotest.NewRepeatReader(strings.NewReader(tc.input),
 					tc.repeat)
 
 				expectedBytes, err := io.ReadAll(repeater)

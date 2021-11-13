@@ -197,14 +197,7 @@ func TestUTF8Decoder(t *testing.T) {
 				expected = tc.want.partial
 			}
 
-			assert.EqualInts(t, len(expected), len(got), "rune slice len mismatch: %s",
-				string(got))
-
-			for i, r := range expected {
-				if r != got[i] {
-					t.Errorf("want[%d = %c] but got[%d = %c]", r, r, got[i], got[i])
-				}
-			}
+			assertRunesEqual(t, expected, got)
 		})
 	}
 
@@ -229,15 +222,7 @@ func TestUTF8ReaderMultipleSizes(t *testing.T) {
 		assert.NoError(t, err, "reading expected runes")
 
 		expected := []rune(string(expectedBytes))
-
-		assert.EqualInts(t, len(expected), len(runes), "length mismatch")
-
-		for j := 0; j < len(expected); j++ {
-			if expected[j] != runes[j] {
-				t.Errorf("rune %d are not equal: %c != %c",
-					j, expected[j], runes[j])
-			}
-		}
+		assertRunesEqual(t, expected, runes)
 	}
 }
 
@@ -259,15 +244,7 @@ func TestUTF8ReaderHalfRead(t *testing.T) {
 		assert.NoError(t, err, "reading expected runes")
 
 		expected := []rune(string(expectedBytes))
-
-		assert.EqualInts(t, len(expected), len(runes), "length mismatch")
-
-		for j := 0; j < len(expected); j++ {
-			if expected[j] != runes[j] {
-				t.Errorf("rune %d are not equal: %c != %c",
-					j, expected[j], runes[j])
-			}
-		}
+		assertRunesEqual(t, expected, runes)
 	}
 }
 
@@ -342,12 +319,15 @@ func TestUTF8ReaderOneByteReader(t *testing.T) {
 
 	expected := []rune(string(expectedBytes))
 
-	assert.EqualInts(t, len(expected), len(runes), "length mismatch")
+	assertRunesEqual(t, expected, runes)
+}
 
-	for j := 0; j < len(expected); j++ {
-		if expected[j] != runes[j] {
-			t.Errorf("rune %d are not equal: %c != %c",
-				j, expected[j], runes[j])
+func assertRunesEqual(t *testing.T, expected, got []rune) {
+	assert.EqualInts(t, len(expected), len(got), "length mismatch")
+
+	for i, r := range expected {
+		if r != got[i] {
+			t.Errorf("want[%d = %c] but got[%d = %c]", r, r, got[i], got[i])
 		}
 	}
 }
