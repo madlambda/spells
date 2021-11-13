@@ -31,6 +31,6 @@ func IsError(t *testing.T, got, want error, details ...interface{}) {
 	detail := errordetails(details...)
 
 	if !errors.Is(got, want) {
-		t.Fatalf("error[%v] does not match wanted[%v].%s", got, want, detail)
+		t.Fatalf("got [%v] but wanted [%v]: %s", got, want, detail)
 	}
 }
