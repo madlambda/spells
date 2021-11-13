@@ -128,5 +128,5 @@ func (e *Error) Offset() int { return e.offset }
 func (e *Error) Undecoded() []byte { return e.undecoded }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("invalid rune  at offset %d", e.offset)
+	return fmt.Sprintf("invalid rune at offset %d", e.offset)
 }
