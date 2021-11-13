@@ -38,16 +38,18 @@ func NewDecoder(r bytes.Reader) *Decoder {
 	}
 }
 
-// Read implements runes.Reader interface.
+// Read reads the underlying byte stream and decodes it to runes.
+// For details about how to use Read(), please see the documentation of the
+// runes.Reader interface.
 //
-// It will use O(N) space where N is the size of the data slice provided.
-// For ASCII data it allocates exactly len(data) bytes (or sizeof(data)/4) but
-// in case of multi-byte code points it allocates a maximum of sizeof(data)
-// or len(data)*4.
+// It will use O(N) space where N is the size of the data slice provided. For
+// ASCII data it allocates exactly len(data) bytes (or sizeof(data)/4) but in
+// case of multi-byte code points it allocates a maximum of sizeof(data) or
+// len(data)*4.
 //
-// The first call to the source reader uses a full buffer of len(data) bytes
-// but subsequent calls read byte by byte. This is a tradeoff optimization for
-// the kind of use cases this function was designed for: parsing languages.
+// The first call to the source reader uses a full buffer of len(data) bytes but
+// subsequent calls read byte by byte. This is a tradeoff optimization for the
+// kind of use cases this function was designed for: parsing languages.
 // Configuration files and programming languages source code are mainly composed
 // of ASCII data, so allocating len(data)*4 seems to be wasteful.
 func (d *Decoder) Read(data []rune) (int, error) {
