@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	stdiotest "testing/iotest"
@@ -156,7 +157,7 @@ func TestUTF8Decoder(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := utf8.NewDecoder(iotest.NewRepeatReader(
-				bytes.NewBuffer([]byte(tc.input)),
+				strings.NewReader(tc.input),
 				tc.repeat))
 
 			got, err := runes.ReadAll(reader)
@@ -170,7 +171,7 @@ func TestUTF8Decoder(t *testing.T) {
 			var expected []rune
 
 			if tc.want.err == nil {
-				repeater := iotest.NewRepeatReader(bytes.NewBuffer([]byte(tc.input)),
+				repeater := iotest.NewRepeatReader(strings.NewReader(tc.input),
 					tc.repeat)
 
 				expectedBytes, err := io.ReadAll(repeater)
@@ -211,7 +212,7 @@ func TestUTF8Decoder(t *testing.T) {
 }
 
 func TestUTF8ReaderMultipleSizes(t *testing.T) {
-	input := iotest.NewRepeatReader(bytes.NewBuffer([]byte(socraticParadox)), 100)
+	input := iotest.NewRepeatReader(strings.NewReader(socraticParadox), 100)
 	inputBytes, err := io.ReadAll(input)
 	assert.NoError(t, err, "failed to repeat input")
 
@@ -241,7 +242,7 @@ func TestUTF8ReaderMultipleSizes(t *testing.T) {
 }
 
 func TestUTF8ReaderHalfRead(t *testing.T) {
-	input := iotest.NewRepeatReader(bytes.NewBuffer([]byte(socraticParadox)), 100)
+	input := iotest.NewRepeatReader(strings.NewReader(socraticParadox), 100)
 	inputBytes, err := io.ReadAll(input)
 	assert.NoError(t, err, "failed to repeat input")
 
@@ -306,7 +307,7 @@ func TestUTF8ReaderFromFileMultipleBufferSizes(t *testing.T) {
 }
 
 func TestUTF8ReaderNonEOF(t *testing.T) {
-	buf := stdiotest.DataErrReader(bytes.NewBuffer([]byte("test")))
+	buf := stdiotest.DataErrReader(strings.NewReader("test"))
 	reader := utf8.NewDecoder(buf)
 
 	data := make([]rune, 10)
@@ -328,8 +329,8 @@ func TestUTF8ReaderError(t *testing.T) {
 }
 
 func TestUTF8ReaderOneByteReader(t *testing.T) {
-	buf1 := bytes.NewBuffer([]byte(socraticParadox))
-	buf2 := bytes.NewBuffer([]byte(socraticParadox))
+	buf1 := strings.NewReader(socraticParadox)
+	buf2 := strings.NewReader(socraticParadox)
 	repeater1 := stdiotest.HalfReader(iotest.NewRepeatReader(buf1, 100))
 	repeater2 := iotest.NewRepeatReader(buf2, 100)
 
