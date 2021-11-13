@@ -2,31 +2,38 @@ package utf8
 
 import (
 	"fmt"
-	"io"
 	"unicode/utf8"
 
 	"github.com/madlambda/spells/io/bytes"
 )
 
-type (
-	RuneReader struct {
-		r io.RuneReader
-	}
+// Decoder decodes UTF-8 encoded bytes in a `bytes.Reader` stream.
+type Decoder struct {
+	r bytes.Reader
+}
 
-	// ReaderReader implements a runes.Reader from a bytes.Reader interface.
-	ReaderReader struct {
-		r bytes.Reader
-	}
+// Error represents UTF-8 decoding error.
+type Error struct {
+	offset    int
+	undecoded []byte
+}
 
-	Error string
-)
-
-const ErrDecode Error = "invalid rune"
-
-// NewReaderReader creates a runes.Reader implementation from an bytes.Reader
-// interface.
-func NewReaderReader(r bytes.Reader) *ReaderReader {
-	return &ReaderReader{
+// NewDecoder creates an UTF-8 decoder from a `bytes.Reader` byte stream.
+// By calling the Read method, the decoder reads and decodes runes from the byte
+// stream. It's an unbuffered decoder, which means every data read from r is
+// returned either decoded or in the `Error.Bytes()`, no state is kept in the
+// decoder for future calls.
+//
+// Example:
+//   dec := utf8.NewDecoder(bytestream)
+//   data := make([]rune, 512)
+//   n, err := dec.Read(data[:])
+//   if err != nil && err != io.EOF {
+//	     undecodedBytes := utf8.ErrBytes(err)
+//       ...
+//   }
+func NewDecoder(r bytes.Reader) *Decoder {
+	return &Decoder{
 		r: r,
 	}
 }
@@ -43,7 +50,7 @@ func NewReaderReader(r bytes.Reader) *ReaderReader {
 // the kind of use cases this function was designed for: parsing languages.
 // Configuration files and programming languages source code are mainly composed
 // of ASCII data, so allocating len(data)*4 seems to be wasteful.
-func (rr *ReaderReader) Read(data []rune) (int, error) {
+func (d *Decoder) Read(data []rune) (int, error) {
 	var (
 		nrunes    int
 		runeStart int // decoding starts at this offset
@@ -59,7 +66,7 @@ func (rr *ReaderReader) Read(data []rune) (int, error) {
 		}
 
 		begin := len(b)
-		n, err := rr.r.Read(b[begin:end])
+		n, err := d.r.Read(b[begin:end])
 		b = b[:len(b)+n]
 
 		lastRead := begin + n
@@ -71,8 +78,10 @@ func (rr *ReaderReader) Read(data []rune) (int, error) {
 			for runeStart+count < lastRead {
 				r, size := utf8.DecodeRune(b[runeStart:lastRead])
 				if r == utf8.RuneError {
-					return nrunes, fmt.Errorf("%w (offset %d, byte %d)",
-						ErrDecode, runeStart, b[runeStart])
+					return nrunes, &Error{
+						offset:    runeStart,
+						undecoded: b[runeStart:],
+					}
 				}
 
 				runeStart += size
@@ -112,31 +121,13 @@ func lastPartialRuneCount(p []byte) int {
 	return 0
 }
 
-// NewReader implements a runes.Reader interface from a io.RuneReader interface.
-func NewReader(r io.RuneReader) *RuneReader {
-	return &RuneReader{
-		r: r,
-	}
-}
+// Offset returns the offset of the offended byte.
+func (e *Error) Offset() int { return e.offset }
 
-// Read implements the runes.Reader interface.
-func (rd *RuneReader) Read(data []rune) (int, error) {
-	offset := 0
-	for i := 0; i < len(data); i++ {
-		r, size, err := rd.r.ReadRune()
-		if err != nil {
-			return i, err
-		}
-		if r == utf8.RuneError {
-			return i, fmt.Errorf("%w at offset %d", ErrDecode, offset)
-		}
-		offset += size
-		data[i] = r
-	}
+// Undecoded returns the undecoded bytes read from the byte stream.
+// The first byte is the offended invalid rune.
+func (e *Error) Undecoded() []byte { return e.undecoded }
 
-	return len(data), nil
-}
-
-func (e Error) Error() string {
-	return string(e)
+func (e *Error) Error() string {
+	return fmt.Sprintf("invalid rune  at offset %d", e.offset)
 }

@@ -25,10 +25,12 @@ func Error(t *testing.T, err error, details ...interface{}) {
 
 // IsError will call Fatal if the given error does not match the want error.
 // It uses the errors.Is() function to check if the error wraps the wanted error.
-func IsError(t *testing.T, want, got error, details ...interface{}) {
+func IsError(t *testing.T, got, want error, details ...interface{}) {
 	t.Helper()
 
+	detail := errordetails(details...)
+
 	if !errors.Is(got, want) {
-		t.Fatalf("error[%s] does not match wanted[%s].%s", got, want, details)
+		t.Fatalf("error[%v] does not match wanted[%v].%s", got, want, detail)
 	}
 }
