@@ -67,9 +67,8 @@ func (d *Decoder) Read(data []rune) (int, error) {
 
 		begin := len(b)
 		n, err := d.r.Read(b[begin:end])
-		b = b[:len(b)+n]
-
 		lastRead := begin + n
+		b = b[:lastRead]
 
 		if n > 0 {
 			count := lastPartialRuneCount(b[runeStart:lastRead])
