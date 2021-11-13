@@ -283,16 +283,19 @@ func TestUTF8ReaderFromFileMultipleBufferSizes(t *testing.T) {
 	assert.NoError(t, err, "writing utf8 file")
 	assert.EqualInts(t, len(socraticParadox), n, "written len mismatch")
 
+	temp.Close()
+
 	for i := 0; i < expectedLen; i++ {
 		t.Run(fmt.Sprintf("using buffer size: %d", i), func(t *testing.T) {
-			off, err := temp.Seek(0, 0)
-			assert.NoError(t, err, "seek to file offset 0")
-			assert.EqualInts(t, 0, int(off), "invalid offset")
+			temp, err := os.Open(temp.Name())
+			assert.NoError(t, err, "open file for read")
+
+			defer temp.Close()
 
 			r := utf8.NewDecoder(temp)
 
 			runes := make([]rune, i)
-			n, err = r.Read(runes[:])
+			n, err = r.Read(runes)
 
 			assert.NoError(t, err, "failed reading runes")
 			assert.EqualInts(t, i, n, "read wrong number of runes")
@@ -307,7 +310,7 @@ func TestUTF8ReaderNonEOF(t *testing.T) {
 	reader := utf8.NewDecoder(buf)
 
 	data := make([]rune, 10)
-	n, err := reader.Read(data[:])
+	n, err := reader.Read(data)
 	assert.EqualInts(t, 4, n, "read size mismatch")
 	assert.EqualErrs(t, io.EOF, err, "error is not EOF")
 	assert.EqualStrings(t, "test", string(data[:n]), "string mismatch")
@@ -319,7 +322,7 @@ func TestUTF8ReaderError(t *testing.T) {
 	reader := utf8.NewDecoder(buf)
 
 	data := make([]rune, 10)
-	n, err := reader.Read(data[:])
+	n, err := reader.Read(data)
 	assert.EqualErrs(t, expected, err, "err mismatch")
 	assert.EqualInts(t, 0, n, "read size mismatch")
 }
