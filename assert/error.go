@@ -29,7 +29,6 @@ func IsError(t *testing.T, got, want error, details ...interface{}) {
 	t.Helper()
 
 	detail := errordetails(details...)
-
 	if !errors.Is(got, want) {
 		t.Fatalf("got [%v] but wanted [%v]: %s", got, want, detail)
 	}
