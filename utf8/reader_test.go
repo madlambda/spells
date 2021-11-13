@@ -59,6 +59,51 @@ var testcases = []testcase{
 		repeat: 1,
 	},
 	{
+		name:   "single rune - 2 bytes",
+		input:  "ί",
+		repeat: 1,
+	},
+	{
+		name:   "1 ascii - start with multibyte",
+		input:  "ίA",
+		repeat: 1,
+	},
+	{
+		name:   "1 ascii - end with multibyte",
+		input:  "Aί",
+		repeat: 1,
+	},
+	{
+		name:   "single rune - 3 bytes",
+		input:  "ࠀ",
+		repeat: 1,
+	},
+	{
+		name:   "decoding ࠀࠆࠉࠌ",
+		input:  "ࠀࠆࠉࠌ",
+		repeat: 1,
+	},
+	{
+		name:   "decoding mixed 3-byte and ASCII ࠀࠆࠉASCIIࠌ",
+		input:  "ࠀࠆࠉASCIIࠌ",
+		repeat: 1,
+	},
+	{
+		name:   "single rune - 4 bytes",
+		input:  "𒁘",
+		repeat: 1,
+	},
+	{
+		name:   "decoding 𓁺𒂞𒆙𒈙𒌦𓁙",
+		input:  "𓁺𒂞𒆙𒈙𒌦𓁙",
+		repeat: 1,
+	},
+	{
+		name:   "decoding mixed ASCII and 4-byte - 𓁺𒂞𒆙ASCII𒈙𒌦𓁙",
+		input:  "𓁺𒂞𒆙ASCII𒈙𒌦𓁙",
+		repeat: 1,
+	},
+	{
 		name:   "decoding " + socraticParadox,
 		input:  socraticParadox,
 		repeat: 1,
