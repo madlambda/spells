@@ -37,6 +37,9 @@ func (e Error) Error() string {
 //
 // An empty list of errors will return a nil error.
 func Chain(errs ...error) error {
+	// TODO(katcipis): should we do something when
+	// in the middle of the errs slice we have nils ?
+	// prone to filtering nils out, or they will break the chain anyway.
 	if len(errs) == 0 {
 		return nil
 	}

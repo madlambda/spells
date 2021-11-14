@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/madlambda/spells/assert"
 	"github.com/madlambda/spells/errutil"
 )
 
@@ -43,9 +44,7 @@ func TestErrorChain(t *testing.T) {
 	}
 
 	err := errutil.Chain(errs...)
-	if err == nil {
-		t.Fatal("got nil, wanted error")
-	}
+	assert.Error(t, err)
 
 	got := err
 	for i, want := range errs {
@@ -64,6 +63,10 @@ func TestErrorChain(t *testing.T) {
 	if got != nil {
 		t.Fatalf("wanted error chain to reach end (nil), got chain [%v] instead", got)
 	}
+}
+
+func TestErrorChainForEmptyErrList(t *testing.T) {
+	assert.NoError(t, errutil.Chain())
 }
 
 func assertErrorIsWrapped(t *testing.T, err error, target error) {
