@@ -6,6 +6,8 @@
 // - An error type that makes it easy to work with const error sentinels.
 package errutil
 
+import "fmt"
+
 // Error implements the Go's error interface in the simplest
 // way possible, allowing initialization error sentinels to be done
 // at compile time as constants. It does so by using a string
@@ -51,7 +53,13 @@ func Chain(errs ...error) error {
 
 // Error return a string representation of the chain of errors.
 func (e ErrorChain) Error() string {
-	return "TODO"
+	if e.Head == nil {
+		return ""
+	}
+	if e.Tail == nil {
+		return e.Head.Error()
+	}
+	return fmt.Sprintf("%s: %s", e.Head.Error(), e.Tail.Error())
 }
 
 // Unwrap return the wrapped error or nil if there is none.

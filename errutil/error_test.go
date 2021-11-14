@@ -65,8 +65,60 @@ func TestErrorChain(t *testing.T) {
 	}
 }
 
+func TestErrorChainStringRepresentation(t *testing.T) {
+	type TestCase struct {
+		name string
+		errs []error
+		want string
+	}
+
+	tcases := []TestCase{
+		{
+			name: "Single Error",
+			errs: []error{
+				errors.New("error 1"),
+			},
+			want: "error 1",
+		},
+		{
+			name: "Two Chained Errors",
+			errs: []error{
+				errors.New("error 1"),
+				errors.New("error 2"),
+			},
+			want: "error 1: error 2",
+		},
+		{
+			name: "Three Chained Errors",
+			errs: []error{
+				errors.New("error 1"),
+				errors.New("error 2"),
+				errors.New("error 3"),
+			},
+			want: "error 1: error 2: error 3",
+		},
+	}
+
+	for _, tc := range tcases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			err := errutil.Chain(tc.errs...)
+			assert.Error(t, err)
+
+			got := err.Error()
+
+			if got != tc.want {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+
+}
+
 func TestErrorChainForEmptyErrList(t *testing.T) {
 	assert.NoError(t, errutil.Chain())
+	errs := []error{}
+	assert.NoError(t, errutil.Chain(errs...))
 }
 
 func assertErrorIsWrapped(t *testing.T, err error, target error) {
