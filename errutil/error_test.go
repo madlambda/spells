@@ -34,6 +34,38 @@ func TestErrorRepresentation(t *testing.T) {
 	}
 }
 
+func TestErrorChain(t *testing.T) {
+	errs := []error{
+		errors.New("top error"),
+		errors.New("wrapped error 1"),
+		errors.New("wrapped error 2"),
+		errors.New("wrapped error 3"),
+	}
+
+	err := errutil.Chain(errs...)
+	if err == nil {
+		t.Fatal("got nil, wanted error")
+	}
+
+	got := err
+	for i, want := range errs {
+		if got == nil {
+			t.Fatal("expected error to exist, got nil")
+		}
+
+		gotChain := got.(errutil.ErrorChain)
+		if gotChain.Head != want {
+			t.Fatalf("error[%d] got: [%v] want: [%v]", i, gotChain.Head, want)
+		}
+
+		got = errors.Unwrap(got)
+	}
+
+	if got != nil {
+		t.Fatalf("wanted error chain to reach end (nil), got chain [%v] instead", got)
+	}
+}
+
 func assertErrorIsWrapped(t *testing.T, err error, target error) {
 	t.Helper()
 	if !errors.Is(err, target) {
