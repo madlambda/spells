@@ -12,17 +12,6 @@ package errutil
 // as it's base type.
 type Error string
 
-// ErrorChain implements the Go's Unwrap interface, representing
-// a chain of errors. It is usually built by using the Chain
-// function and you rarely need to manipulate it directly,
-// just use errors.Is, errors.As functions from go stdlib.
-type ErrorChain struct {
-	// Head is the head error of the chain.
-	Head error
-	// Tail is the rest of the chain, nil if this is the last err.
-	Tail error
-}
-
 // Error return a string representation of the error.
 func (e Error) Error() string {
 	return string(e)
@@ -43,24 +32,32 @@ func Chain(errs ...error) error {
 	if len(errs) == 0 {
 		return nil
 	}
-	return ErrorChain{
-		Head: errs[0],
-		Tail: Chain(errs[1:]...),
+	return errorChain{
+		head: errs[0],
+		tail: Chain(errs[1:]...),
 	}
+}
+
+type errorChain struct {
+	head error
+	tail error
 }
 
 // Error return a string representation of the chain of errors.
-func (e ErrorChain) Error() string {
-	if e.Head == nil {
+func (e errorChain) Error() string {
+	if e.head == nil {
 		return ""
 	}
-	if e.Tail == nil {
-		return e.Head.Error()
+	if e.tail == nil {
+		return e.head.Error()
 	}
-	return e.Head.Error() + ": " + e.Tail.Error()
+	return e.head.Error() + ": " + e.tail.Error()
 }
 
-// Unwrap return the wrapped error or nil if there is none.
-func (e ErrorChain) Unwrap() error {
-	return e.Tail
+func (e errorChain) Unwrap() error {
+	return e.tail
+}
+
+func (e errorChain) Is(target error) bool {
+	return e.head == target
 }

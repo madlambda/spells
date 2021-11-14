@@ -52,11 +52,12 @@ func TestErrorChain(t *testing.T) {
 			t.Fatal("expected error to exist, got nil")
 		}
 
-		gotChain := got.(errutil.ErrorChain)
-		if gotChain.Head != want {
-			t.Fatalf("error[%d] got: [%v] want: [%v]", i, gotChain.Head, want)
+		if !errors.Is(got, want) {
+			t.Fatalf("error[%d] got: [%v] want: [%v]", i, got, want)
 		}
 
+		// We could only test chain through errors.Is
+		// But wanted to check the unwrapping order too.
 		got = errors.Unwrap(got)
 	}
 
