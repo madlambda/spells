@@ -122,6 +122,28 @@ func TestErrorChainForEmptyErrList(t *testing.T) {
 	assert.NoError(t, errutil.Chain(errs...))
 }
 
+func TestErrorChainRespectIsMethodOfChainedErrors(t *testing.T) {
+	var neverIs errorThatNeverIs
+
+	err := errutil.Chain(neverIs)
+	if errors.Is(err, neverIs) {
+		t.Fatalf("errors.Is(%q, %q) = true, wanted false", err, neverIs)
+	}
+}
+
+// To test the Is method the error must not be comparable.
+// If it is comparable, Go always just compares it, the Is method
+// is just a fallback, not an override of actual behavior.
+type errorThatNeverIs []string
+
+func (e errorThatNeverIs) Is(err error) bool {
+	return false
+}
+
+func (e errorThatNeverIs) Error() string {
+	return "never is"
+}
+
 func assertErrorIsWrapped(t *testing.T, err error, target error) {
 	t.Helper()
 	if !errors.Is(err, target) {

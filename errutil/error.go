@@ -6,6 +6,8 @@
 // - An error type that makes it easy to work with const error sentinels.
 package errutil
 
+import "errors"
+
 // Error implements the Go's error interface in the simplest
 // way possible, allowing initialization error sentinels to be done
 // at compile time as constants. It does so by using a string
@@ -59,5 +61,5 @@ func (e errorChain) Unwrap() error {
 }
 
 func (e errorChain) Is(target error) bool {
-	return e.head == target
+	return errors.Is(e.head, target)
 }
