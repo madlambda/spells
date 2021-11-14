@@ -63,3 +63,7 @@ func (e errorChain) Unwrap() error {
 func (e errorChain) Is(target error) bool {
 	return errors.Is(e.head, target)
 }
+
+func (e errorChain) As(target interface{}) bool {
+	return errors.As(e.head, target)
+}

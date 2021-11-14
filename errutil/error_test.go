@@ -116,6 +116,36 @@ func TestErrorChainStringRepresentation(t *testing.T) {
 
 }
 
+func TestErrorChainTypeSelection(t *testing.T) {
+	want1 := error1{
+		data: "yay",
+	}
+	want2 := error2{
+		data: 666,
+	}
+
+	err := errutil.Chain(want1, want2)
+	assert.Error(t, err)
+
+	var got1 error1
+
+	if !errors.As(err, &got1) {
+		t.Fatalf("errors.As(%v, %v) == false, want true", err, &got1)
+	}
+	assert.EqualStrings(t, want1.data, got1.data)
+
+	var got2 error2
+	if !errors.As(err, &got2) {
+		t.Fatalf("errors.As(%v, %v) == false, want true", err, &got2)
+	}
+	assert.EqualInts(t, want2.data, got2.data)
+
+	var unrelatedErr errutil.Error
+	if errors.As(err, &unrelatedErr) {
+		t.Fatalf("errors.As(%v, %v) == true, want false", err, &unrelatedErr)
+	}
+}
+
 func TestErrorChainForEmptyErrList(t *testing.T) {
 	assert.NoError(t, errutil.Chain())
 	errs := []error{}
@@ -142,6 +172,22 @@ func (e errorThatNeverIs) Is(err error) bool {
 
 func (e errorThatNeverIs) Error() string {
 	return "never is"
+}
+
+type error1 struct {
+	data string
+}
+
+type error2 struct {
+	data int
+}
+
+func (e error1) Error() string {
+	return e.data
+}
+
+func (e error2) Error() string {
+	return fmt.Sprint(e.data)
 }
 
 func assertErrorIsWrapped(t *testing.T, err error, target error) {
