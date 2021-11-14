@@ -36,33 +36,47 @@ func TestErrorRepresentation(t *testing.T) {
 }
 
 func TestErrorChain(t *testing.T) {
-	errs := []error{
-		errors.New("top error"),
-		errors.New("wrapped error 1"),
-		errors.New("wrapped error 2"),
-		errors.New("wrapped error 3"),
+	testcases := [][]error{
+		[]error{errors.New("single error")},
+		[]error{
+			errors.New("top error"),
+			errors.New("wrapped error 1"),
+		},
+		[]error{
+			errors.New("top error"),
+			errors.New("wrapped error 1"),
+			errors.New("wrapped error 2"),
+		},
 	}
 
-	err := errutil.Chain(errs...)
-	assert.Error(t, err)
+	for _, errs := range testcases {
 
-	got := err
-	for i, want := range errs {
-		if got == nil {
-			t.Fatal("expected error to exist, got nil")
-		}
+		name := fmt.Sprintf("%dErrors", len(errs))
+		t.Run(name, func(t *testing.T) {
 
-		if !errors.Is(got, want) {
-			t.Fatalf("error[%d] got: [%v] want: [%v]", i, got, want)
-		}
+			err := errutil.Chain(errs...)
+			assert.Error(t, err)
 
-		// We could only test chain through errors.Is
-		// But wanted to check the unwrapping order too.
-		got = errors.Unwrap(got)
-	}
+			got := err
+			for i, want := range errs {
+				if got == nil {
+					t.Fatal("expected error to exist, got nil")
+				}
 
-	if got != nil {
-		t.Fatalf("wanted error chain to reach end (nil), got chain [%v] instead", got)
+				if !errors.Is(got, want) {
+					t.Fatalf("error[%d] got: [%v] want: [%v]", i, got, want)
+				}
+
+				// We could only test chain through errors.Is
+				// But wanted to check the unwrapping order too.
+				got = errors.Unwrap(got)
+			}
+
+			if got != nil {
+				t.Fatalf("wanted error chain to reach end (nil), got chain [%v] instead", got)
+			}
+		})
+
 	}
 }
 
