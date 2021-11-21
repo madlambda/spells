@@ -36,29 +36,100 @@ func TestErrorRepresentation(t *testing.T) {
 }
 
 func TestErrorChain(t *testing.T) {
-	testcases := [][]error{
-		[]error{errors.New("single error")},
-		[]error{
-			errors.New("top error"),
-			errors.New("wrapped error 1"),
+	type testcase struct {
+		name string
+		errs []error
+		want []error
+	}
+
+	const (
+		sentinelErr  errutil.Error = "a sentinel error"
+		sentinel2Err errutil.Error = "another sentinel error"
+		sentinel3Err errutil.Error = "YASE"
+	)
+
+	testcases := []testcase{
+		{
+			name: "single error",
+			errs: []error{errors.New("single error")},
 		},
-		[]error{
-			errors.New("top error"),
-			errors.New("wrapped error 1"),
-			errors.New("wrapped error 2"),
+		{
+			name: "two errors",
+			errs: []error{
+				errors.New("top error"),
+				errors.New("wrapped error 1"),
+			},
+		},
+		{
+			name: "three errors",
+			errs: []error{
+				errors.New("top error"),
+				errors.New("wrapped error 1"),
+				errors.New("wrapped error 2"),
+			},
+		},
+		{
+			name: "errors is nil and err",
+			errs: []error{
+				nil,
+				sentinelErr,
+			},
+			want: []error{
+				sentinelErr,
+			},
+		},
+		{
+			name: "errors is err and nil",
+			errs: []error{
+				sentinelErr,
+				nil,
+			},
+			want: []error{
+				sentinelErr,
+			},
+		},
+		{
+			name: "errors is nil,err,nil",
+			errs: []error{
+				nil,
+				sentinelErr,
+				nil,
+			},
+			want: []error{
+				sentinelErr,
+			},
+		},
+		{
+			name: "errors interleaved with nils",
+			errs: []error{
+				sentinelErr,
+				nil,
+				sentinel2Err,
+				nil,
+				sentinel3Err,
+				nil,
+			},
+			want: []error{
+				sentinelErr,
+				sentinel2Err,
+				sentinel3Err,
+			},
 		},
 	}
 
-	for _, errs := range testcases {
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
 
-		name := fmt.Sprintf("%dErrors", len(errs))
-		t.Run(name, func(t *testing.T) {
-
-			err := errutil.Chain(errs...)
+			err := errutil.Chain(tc.errs...)
 			assert.Error(t, err)
 
 			got := err
-			for i, want := range errs {
+
+			if tc.want == nil {
+				tc.want = tc.errs
+			}
+
+			for i, want := range tc.want {
 				if got == nil {
 					t.Fatal("expected error to exist, got nil")
 				}
