@@ -47,9 +47,6 @@ type errorChain struct {
 
 // Error return a string representation of the chain of errors.
 func (e errorChain) Error() string {
-	if e.head == nil {
-		return ""
-	}
 	if e.tail == nil {
 		return e.head.Error()
 	}
