@@ -160,10 +160,15 @@ func TestErrorChainTypeSelection(t *testing.T) {
 	}
 }
 
-func TestErrorChainForEmptyErrList(t *testing.T) {
+func TestErrorChainForEmptyErrListIsNil(t *testing.T) {
 	assert.NoError(t, errutil.Chain())
 	errs := []error{}
 	assert.NoError(t, errutil.Chain(errs...))
+}
+
+func TestErrorChainWithOnlyNilErrorsIsNil(t *testing.T) {
+	assert.NoError(t, errutil.Chain(nil))
+	assert.NoError(t, errutil.Chain(nil, nil))
 }
 
 func TestErrorChainRespectIsMethodOfChainedErrors(t *testing.T) {
