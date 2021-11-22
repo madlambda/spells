@@ -1,6 +1,4 @@
-golangci_lint_version=1.41.1
-
-all: analysis test
+all: lint test bench
 
 test:
 	go test -race -timeout 10s -coverprofile=coverage.txt -covermode=atomic ./...
@@ -19,4 +17,4 @@ bench/memory/%:
 	go test -bench=. -benchmem -memprofile="profilling/${*}-memory.p" "./${*}"
 
 lint:
-	@docker run --rm -v `pwd`:/app -w /app golangci/golangci-lint:v$(golangci_lint_version)  golangci-lint run ./...
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0 run ./...
