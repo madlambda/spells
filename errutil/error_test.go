@@ -175,6 +175,119 @@ func TestErrorChainRespectIsMethodOfChainedErrors(t *testing.T) {
 	}
 }
 
+func TestErrorReducing(t *testing.T) {
+	type testcase struct {
+		name   string
+		input  []error
+		reduce errutil.Reducer
+		want   error
+	}
+
+	tests := []testcase{
+		{
+			name:  "merging two errors",
+			input: []error{errors.New("one"), errors.New("two")},
+			reduce: func(err1, err2 error) error {
+				return fmt.Errorf("%v:%v", err1, err2)
+			},
+			want: errors.New("one:two"),
+		},
+		{
+			name: "merging three errors",
+			input: []error{
+				errors.New("one"),
+				errors.New("two"),
+				errors.New("three"),
+			},
+			reduce: func(err1, err2 error) error {
+				return fmt.Errorf("%v/%v", err1, err2)
+			},
+			want: errors.New("one/two/three"),
+		},
+		{
+			name: "filtering just first err",
+			input: []error{
+				errors.New("one"),
+				errors.New("two"),
+				errors.New("three"),
+			},
+			reduce: func(err1, err2 error) error {
+				return err1
+			},
+			want: errors.New("one"),
+		},
+		{
+			name: "filtering just second err",
+			input: []error{
+				errors.New("one"),
+				errors.New("two"),
+				errors.New("three"),
+			},
+			reduce: func(err1, err2 error) error {
+				return err2
+			},
+			want: errors.New("three"),
+		},
+		{
+			name: "reduces to nil",
+			input: []error{
+				errors.New("one"),
+				errors.New("two"),
+				errors.New("three"),
+			},
+			reduce: func(err1, err2 error) error {
+				return nil
+			},
+			want: nil,
+		},
+		{
+			name:  "reduces empty err list to nil",
+			input: []error{},
+			reduce: func(err1, err2 error) error {
+				panic("unreachable")
+				return nil
+			},
+			want: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			g := errutil.Reduce(test.reduce, test.input...)
+
+			if test.want == nil {
+				if g != nil {
+					t.Fatalf(
+						"errutil.Reduce(%v)=%q; want nil",
+						test.input,
+						g,
+					)
+				}
+			}
+
+			if g == nil {
+				t.Fatalf(
+					"errutil.Reduce(%v)=nil; want %q",
+					test.input,
+					test.want,
+				)
+			}
+
+			got := g.Error()
+			want := test.want.Error()
+
+			if got != want {
+				t.Fatalf(
+					"errutil.Reduce(%v)=%q; want=%q",
+					test.input,
+					got,
+					want,
+				)
+			}
+		})
+	}
+}
+
 // To test the Is method the error must not be comparable.
 // If it is comparable, Go always just compares it, the Is method
 // is just a fallback, not an override of actual behavior.

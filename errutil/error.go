@@ -4,6 +4,11 @@
 // Utilities include:
 //
 // - An error type that makes it easy to work with const error sentinels.
+// - An easy way to wrap a list of errors together.
+// - An easy way to merge a list of errors opaquely.
+//
+// Flexible enough that you can do your own wrapping/merging logic
+// but in a functional/simple way.
 package errutil
 
 import "errors"
@@ -13,6 +18,9 @@ import "errors"
 // at compile time as constants. It does so by using a string
 // as it's base type.
 type Error string
+
+// Reducer reduces 2 errors into one
+type Reducer func(error, error) error
 
 // Error return a string representation of the error.
 func (e Error) Error() string {
@@ -38,6 +46,13 @@ func Chain(errs ...error) error {
 		head: errs[0],
 		tail: Chain(errs[1:]...),
 	}
+}
+
+// Reduce will reduce all errors to a single one using the
+// provided reduce function.
+// Reduce will panic if the given reduce function panics.
+func Reduce(reduce Reducer, errs ...error) error {
+	return nil
 }
 
 type errorChain struct {
