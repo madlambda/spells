@@ -39,9 +39,37 @@ func ExampleChain() {
 	fmt.Println(errors.Is(err, layer1Err))
 	fmt.Println(errors.Is(err, layer2Err))
 	fmt.Println(errors.Is(err, layer3Err))
+	fmt.Println(err)
 
 	// Output:
 	// true
 	// true
 	// true
+	// layer1Err: layer2Err: layer3Err
+}
+
+func ExampleMerge() {
+	// call multiple functions that may return an error
+	// but none of them should interrupt overall computation
+	var i int
+	someFunc := func() error {
+		i++
+		return fmt.Errorf("error %d", i)
+	}
+
+	var errs []error
+
+	errs = append(errs, someFunc())
+	errs = append(errs, someFunc())
+	errs = append(errs, someFunc())
+
+	// Chain the errors
+	err := errutil.Merge(errs...)
+
+	// Checking programmatically for the underlying error
+	// Users of your API handle the sentinels opaquely
+	fmt.Println(err)
+
+	// Output:
+	// error 1: error 2: error 3
 }

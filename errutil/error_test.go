@@ -342,7 +342,7 @@ func TestErrorMerging(t *testing.T) {
 			want: "error 1: error 2",
 		},
 		{
-			name: "multiple nils",
+			name: "multiple nils interleaved",
 			errs: []error{
 				nil,
 				nil,
@@ -378,6 +378,21 @@ func TestErrorMerging(t *testing.T) {
 		})
 	}
 
+}
+
+func TestErrorMergingSingleErrorReturnItself(t *testing.T) {
+	want := errors.New("some err")
+	got := errutil.Merge(want)
+	if got != want {
+		t.Fatalf("errutil.Merge(%v)=%v; want=%v", want, got, want)
+	}
+}
+
+func TestErrorMergingOnlyNilReturnsNil(t *testing.T) {
+	assert.NoError(t, errutil.Merge())
+	assert.NoError(t, errutil.Merge(nil))
+	assert.NoError(t, errutil.Merge(nil, nil))
+	assert.NoError(t, errutil.Merge(nil, nil, nil))
 }
 
 // To test the Is method the error must not be comparable.
