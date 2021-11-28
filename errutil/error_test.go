@@ -245,7 +245,6 @@ func TestErrorReducing(t *testing.T) {
 			input: []error{},
 			reduce: func(err1, err2 error) error {
 				panic("unreachable")
-				return nil
 			},
 			want: nil,
 		},
