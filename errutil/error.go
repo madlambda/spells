@@ -52,7 +52,15 @@ func Chain(errs ...error) error {
 // provided reduce function.
 // Reduce will panic if the given reduce function panics.
 func Reduce(reduce Reducer, errs ...error) error {
-	return nil
+	if len(errs) == 0 {
+		return nil
+	}
+	if len(errs) == 1 {
+		return errs[0]
+	}
+	err1, err2 := errs[0], errs[1]
+	err := reduce(err1, err2)
+	return Reduce(reduce, append([]error{err}, errs[2:]...)...)
 }
 
 type errorChain struct {

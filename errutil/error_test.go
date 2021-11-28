@@ -256,13 +256,14 @@ func TestErrorReducing(t *testing.T) {
 			g := errutil.Reduce(test.reduce, test.input...)
 
 			if test.want == nil {
-				if g != nil {
-					t.Fatalf(
-						"errutil.Reduce(%v)=%q; want nil",
-						test.input,
-						g,
-					)
+				if g == nil {
+					return
 				}
+				t.Fatalf(
+					"errutil.Reduce(%v)=%q; want nil",
+					test.input,
+					g,
+				)
 			}
 
 			if g == nil {
