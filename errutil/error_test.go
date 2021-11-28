@@ -289,6 +289,55 @@ func TestErrorReducing(t *testing.T) {
 	}
 }
 
+func TestErrorMerging(t *testing.T) {
+	type TestCase struct {
+		name string
+		errs []error
+		want string
+	}
+
+	tcases := []TestCase{
+		{
+			name: "Two Merged Errors",
+			errs: []error{
+				errors.New("error 1"),
+				errors.New("error 2"),
+			},
+			want: "error 1: error 2",
+		},
+		{
+			name: "Three Merged Errors",
+			errs: []error{
+				errors.New("error 1"),
+				errors.New("error 2"),
+				errors.New("error 3"),
+			},
+			want: "error 1: error 2: error 3",
+		},
+	}
+
+	for _, tc := range tcases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			err := errutil.Merge(tc.errs...)
+			assert.Error(t, err)
+
+			got := err.Error()
+
+			if got != tc.want {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+
+			for _, inputErr := range tc.errs {
+				if errors.Is(err, inputErr) {
+					t.Fatalf("errors.Is(%q, %q)=true; want false", err, inputErr)
+				}
+			}
+		})
+	}
+
+}
+
 // To test the Is method the error must not be comparable.
 // If it is comparable, Go always just compares it, the Is method
 // is just a fallback, not an override of actual behavior.
