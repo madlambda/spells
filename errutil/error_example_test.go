@@ -63,11 +63,7 @@ func ExampleMerge() {
 	errs = append(errs, someFunc())
 	errs = append(errs, someFunc())
 
-	// Chain the errors
 	err := errutil.Merge(errs...)
-
-	// Checking programmatically for the underlying error
-	// Users of your API handle the sentinels opaquely
 	fmt.Println(err)
 
 	// Output:
