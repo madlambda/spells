@@ -50,6 +50,14 @@ func Chain(errs ...error) error {
 
 // Reduce will reduce all errors to a single one using the
 // provided reduce function.
+//
+// If errs is empty it returns nil, if errs has a single err
+// (len(errs) == 1) it will return the err itself.
+//
+// It won't assume anything else about the given errs, always
+// calling the reduce function, so nil errs on will be passed
+// to the reduce function so it can deal with them.
+//
 // Reduce will panic if the given reduce function panics.
 func Reduce(reduce Reducer, errs ...error) error {
 	if len(errs) == 0 {
