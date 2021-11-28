@@ -59,8 +59,15 @@ func Chain(errs ...error) error {
 // return an error only if any of the errors failed.
 func Merge(errs ...error) error {
 	return Reduce(func(err1, err2 error) error {
-		// TODO: add nil filtering
-
+		if err1 == nil && err2 == nil {
+			return nil
+		}
+		if err1 == nil {
+			return err2
+		}
+		if err2 == nil {
+			return err1
+		}
 		return errors.New(err1.Error() + ": " + err2.Error())
 	}, errs...)
 }

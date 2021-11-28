@@ -298,7 +298,7 @@ func TestErrorMerging(t *testing.T) {
 
 	tcases := []TestCase{
 		{
-			name: "Two Merged Errors",
+			name: "two merged errors",
 			errs: []error{
 				errors.New("error 1"),
 				errors.New("error 2"),
@@ -306,13 +306,55 @@ func TestErrorMerging(t *testing.T) {
 			want: "error 1: error 2",
 		},
 		{
-			name: "Three Merged Errors",
+			name: "three merged errors",
 			errs: []error{
 				errors.New("error 1"),
 				errors.New("error 2"),
 				errors.New("error 3"),
 			},
 			want: "error 1: error 2: error 3",
+		},
+		{
+			name: "first is nil",
+			errs: []error{
+				nil,
+				errors.New("error 2"),
+				errors.New("error 3"),
+			},
+			want: "error 2: error 3",
+		},
+		{
+			name: "second is nil",
+			errs: []error{
+				errors.New("error 1"),
+				nil,
+				errors.New("error 3"),
+			},
+			want: "error 1: error 3",
+		},
+		{
+			name: "third is nil",
+			errs: []error{
+				errors.New("error 1"),
+				errors.New("error 2"),
+				nil,
+			},
+			want: "error 1: error 2",
+		},
+		{
+			name: "multiple nils",
+			errs: []error{
+				nil,
+				nil,
+				nil,
+				errors.New("error 1"),
+				nil,
+				nil,
+				errors.New("error 2"),
+				nil,
+				nil,
+			},
+			want: "error 1: error 2",
 		},
 	}
 

@@ -1,10 +1,15 @@
+coverage=coverage.txt
+
 all: lint test bench
 
 test:
-	go test -race -timeout 10s -coverprofile=coverage.txt -covermode=atomic ./...
+	go test -race -timeout 10s -coverprofile=$(coverage) -covermode=atomic ./...
 
 test/%:
-	go test -race -timeout 10s -coverprofile=coverage.txt -covermode=atomic -run="${*}" ./...
+	go test -race -timeout 10s -coverprofile=$(coverage) -covermode=atomic -run="${*}" ./...
+
+coverage/show: test
+	go tool cover -html=$(coverage)
 
 fmt:
 	gofmt -s -w .
