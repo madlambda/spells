@@ -28,12 +28,12 @@ func (e Error) Error() string {
 //
 // An empty list of errors will return a nil error.
 func Chain(errs ...error) error {
-	// TODO(katcipis): should we do something when
-	// in the middle of the errs slice we have nils ?
-	// prone to filtering nils out, or they will break the chain anyway.
+	errs = removeNils(errs)
+
 	if len(errs) == 0 {
 		return nil
 	}
+
 	return errorChain{
 		head: errs[0],
 		tail: Chain(errs[1:]...),
@@ -47,9 +47,6 @@ type errorChain struct {
 
 // Error return a string representation of the chain of errors.
 func (e errorChain) Error() string {
-	if e.head == nil {
-		return ""
-	}
 	if e.tail == nil {
 		return e.head.Error()
 	}
@@ -66,4 +63,14 @@ func (e errorChain) Is(target error) bool {
 
 func (e errorChain) As(target interface{}) bool {
 	return errors.As(e.head, target)
+}
+
+func removeNils(errs []error) []error {
+	res := make([]error, 0, len(errs))
+	for _, err := range errs {
+		if err != nil {
+			res = append(res, err)
+		}
+	}
+	return res
 }
