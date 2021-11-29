@@ -81,8 +81,6 @@ func Merge(errs ...error) error {
 // It won't assume anything else about the given errs, always
 // calling the reduce function, so nil errs on will be passed
 // to the reduce function so it can deal with them.
-//
-// Reduce will panic if the given reduce function panics.
 func Reduce(reduce Reducer, errs ...error) error {
 	if len(errs) == 0 {
 		return nil
