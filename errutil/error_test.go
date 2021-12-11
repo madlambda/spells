@@ -470,9 +470,9 @@ func TestErrorReducing(t *testing.T) {
 	}
 }
 
-// To test the Is method the error must not be comparable.
+// To test the Is method the error base type must not be comparable.
 // If it is comparable, Go always just compares it, the Is method
-// is just a fallback, not an override of actual behavior.
+// is just a fallback, not an override of actual comparison behavior.
 type errorThatNeverIs []string
 
 func (e errorThatNeverIs) Is(err error) bool {
