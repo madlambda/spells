@@ -5,7 +5,7 @@
 //
 // - An error type that makes it easy to work with const error sentinels.
 // - An easy way to wrap a list of errors together.
-// - An easy way to merge a list of errors opaquely.
+// - An easy way to reduce a list of errors.
 //
 // Flexible enough that you can do your own wrapping/merging logic
 // but in a functional/simple way.
