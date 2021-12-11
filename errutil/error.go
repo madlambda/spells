@@ -48,30 +48,6 @@ func Chain(errs ...error) error {
 	}
 }
 
-// Merge reduces all given errors to a single opaque error
-// instance containing the original information from all
-// errors aggregated but in an opaque way (opposed to Chain).
-//
-// If the len(errs) == 0 it returns nil, if len(errs) == 1 it
-// returns the error itself and it will filter out nil errs.
-//
-// It is specially useful to manage lists of errors and
-// return an error only if any of the errors failed.
-func Merge(errs ...error) error {
-	return Reduce(func(err1, err2 error) error {
-		if err1 == nil && err2 == nil {
-			return nil
-		}
-		if err1 == nil {
-			return err2
-		}
-		if err2 == nil {
-			return err1
-		}
-		return errors.New(err1.Error() + ": " + err2.Error())
-	}, errs...)
-}
-
 // Reduce will reduce all errors to a single one using the
 // provided reduce function.
 //
@@ -82,6 +58,8 @@ func Merge(errs ...error) error {
 // calling the reduce function, so nil errs on will be passed
 // to the reduce function so it can deal with them.
 func Reduce(reduce Reducer, errs ...error) error {
+	errs = removeNils(errs)
+
 	if len(errs) == 0 {
 		return nil
 	}

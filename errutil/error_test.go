@@ -253,36 +253,43 @@ func TestErrorChainRespectIsMethodOfChainedErrors(t *testing.T) {
 
 func TestErrorReducing(t *testing.T) {
 	type testcase struct {
-		name   string
-		input  []error
-		reduce errutil.Reducer
-		want   error
+		name    string
+		errs    []error
+		reduce  errutil.Reducer
+		want    string
+		wantNil bool
+	}
+
+	mergeWithComma := func(err1, err2 error) error {
+		return fmt.Errorf("%v,%v", err1, err2)
 	}
 
 	tests := []testcase{
 		{
-			name:  "merging two errors",
-			input: []error{errors.New("one"), errors.New("two")},
-			reduce: func(err1, err2 error) error {
-				return fmt.Errorf("%v:%v", err1, err2)
-			},
-			want: errors.New("one:two"),
+			name:   "reducing one error",
+			errs:   []error{errors.New("one")},
+			reduce: mergeWithComma,
+			want:   "one",
 		},
 		{
-			name: "merging three errors",
-			input: []error{
+			name:   "reducing two errors",
+			errs:   []error{errors.New("one"), errors.New("two")},
+			reduce: mergeWithComma,
+			want:   "one,two",
+		},
+		{
+			name: "reducing three errors",
+			errs: []error{
 				errors.New("one"),
 				errors.New("two"),
 				errors.New("three"),
 			},
-			reduce: func(err1, err2 error) error {
-				return fmt.Errorf("%v/%v", err1, err2)
-			},
-			want: errors.New("one/two/three"),
+			reduce: mergeWithComma,
+			want:   "one,two,three",
 		},
 		{
-			name: "filtering just first err",
-			input: []error{
+			name: "filtering just first err of 3",
+			errs: []error{
 				errors.New("one"),
 				errors.New("two"),
 				errors.New("three"),
@@ -290,11 +297,19 @@ func TestErrorReducing(t *testing.T) {
 			reduce: func(err1, err2 error) error {
 				return err1
 			},
-			want: errors.New("one"),
+			want: "one",
+		},
+		{
+			name: "filtering just first err of single err",
+			errs: []error{errors.New("one")},
+			reduce: func(err1, err2 error) error {
+				return err1
+			},
+			want: "one",
 		},
 		{
 			name: "filtering just second err",
-			input: []error{
+			errs: []error{
 				errors.New("one"),
 				errors.New("two"),
 				errors.New("three"),
@@ -302,11 +317,11 @@ func TestErrorReducing(t *testing.T) {
 			reduce: func(err1, err2 error) error {
 				return err2
 			},
-			want: errors.New("three"),
+			want: "three",
 		},
 		{
-			name: "reduces to nil",
-			input: []error{
+			name: "reduces 3 errs to nil",
+			errs: []error{
 				errors.New("one"),
 				errors.New("two"),
 				errors.New("three"),
@@ -314,80 +329,34 @@ func TestErrorReducing(t *testing.T) {
 			reduce: func(err1, err2 error) error {
 				return nil
 			},
-			want: nil,
+			wantNil: true,
 		},
 		{
-			name:  "reduces empty err list to nil",
-			input: []error{},
+			name: "reduces 2 errs to nil",
+			errs: []error{
+				errors.New("one"),
+				errors.New("two"),
+			},
+			reduce: func(err1, err2 error) error {
+				return nil
+			},
+			wantNil: true,
+		},
+		{
+			name: "reduces single err to nil",
+			errs: []error{errors.New("one")},
+			reduce: func(err1, err2 error) error {
+				return nil
+			},
+			wantNil: true,
+		},
+		{
+			name: "reduces empty err list to nil",
+			errs: []error{},
 			reduce: func(err1, err2 error) error {
 				panic("unreachable")
 			},
-			want: nil,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			g := errutil.Reduce(test.reduce, test.input...)
-
-			if test.want == nil {
-				if g == nil {
-					return
-				}
-				t.Fatalf(
-					"errutil.Reduce(%v)=%q; want nil",
-					test.input,
-					g,
-				)
-			}
-
-			if g == nil {
-				t.Fatalf(
-					"errutil.Reduce(%v)=nil; want %q",
-					test.input,
-					test.want,
-				)
-			}
-
-			got := g.Error()
-			want := test.want.Error()
-
-			if got != want {
-				t.Fatalf(
-					"errutil.Reduce(%v)=%q; want=%q",
-					test.input,
-					got,
-					want,
-				)
-			}
-		})
-	}
-}
-
-func TestErrorMerging(t *testing.T) {
-	type TestCase struct {
-		name string
-		errs []error
-		want string
-	}
-
-	tcases := []TestCase{
-		{
-			name: "two merged errors",
-			errs: []error{
-				errors.New("error 1"),
-				errors.New("error 2"),
-			},
-			want: "error 1: error 2",
-		},
-		{
-			name: "three merged errors",
-			errs: []error{
-				errors.New("error 1"),
-				errors.New("error 2"),
-				errors.New("error 3"),
-			},
-			want: "error 1: error 2: error 3",
+			wantNil: true,
 		},
 		{
 			name: "first is nil",
@@ -396,7 +365,8 @@ func TestErrorMerging(t *testing.T) {
 				errors.New("error 2"),
 				errors.New("error 3"),
 			},
-			want: "error 2: error 3",
+			reduce: mergeWithComma,
+			want:   "error 2,error 3",
 		},
 		{
 			name: "second is nil",
@@ -405,7 +375,8 @@ func TestErrorMerging(t *testing.T) {
 				nil,
 				errors.New("error 3"),
 			},
-			want: "error 1: error 3",
+			reduce: mergeWithComma,
+			want:   "error 1,error 3",
 		},
 		{
 			name: "third is nil",
@@ -414,7 +385,8 @@ func TestErrorMerging(t *testing.T) {
 				errors.New("error 2"),
 				nil,
 			},
-			want: "error 1: error 2",
+			reduce: mergeWithComma,
+			want:   "error 1,error 2",
 		},
 		{
 			name: "multiple nils interleaved",
@@ -429,45 +401,79 @@ func TestErrorMerging(t *testing.T) {
 				nil,
 				nil,
 			},
-			want: "error 1: error 2",
+			reduce: mergeWithComma,
+			want:   "error 1,error 2",
+		},
+		{
+			name: "first err among nils",
+			errs: []error{
+				errors.New("error 1"),
+				nil,
+				nil,
+				nil,
+			},
+			reduce: mergeWithComma,
+			want:   "error 1",
+		},
+		{
+			name: "last err among nils",
+			errs: []error{
+				nil,
+				nil,
+				nil,
+				errors.New("error 1"),
+			},
+			reduce: mergeWithComma,
+			want:   "error 1",
+		},
+		{
+			name: "reduces list with nils to nil",
+			errs: []error{
+				nil,
+				nil,
+				nil,
+			},
+			reduce:  mergeWithComma,
+			wantNil: true,
 		},
 	}
 
-	for _, tc := range tcases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			g := errutil.Reduce(test.reduce, test.errs...)
 
-			err := errutil.Merge(tc.errs...)
-			assert.Error(t, err)
-
-			got := err.Error()
-
-			if got != tc.want {
-				t.Fatalf("got %q, want %q", got, tc.want)
+			if test.wantNil {
+				if g == nil {
+					return
+				}
+				t.Fatalf(
+					"errutil.Reduce(%v)=%q; want nil",
+					test.errs,
+					g,
+				)
 			}
 
-			for _, inputErr := range tc.errs {
-				if errors.Is(err, inputErr) {
-					t.Fatalf("errors.Is(%q, %q)=true; want false", err, inputErr)
-				}
+			if g == nil {
+				t.Fatalf(
+					"errutil.Reduce(%v)=nil; want %q",
+					test.errs,
+					test.want,
+				)
+			}
+
+			got := g.Error()
+			want := test.want
+
+			if got != want {
+				t.Fatalf(
+					"errutil.Reduce(%v)=%q; want=%q",
+					test.errs,
+					got,
+					want,
+				)
 			}
 		})
 	}
-
-}
-
-func TestErrorMergingSingleErrorReturnItself(t *testing.T) {
-	want := errors.New("some err")
-	got := errutil.Merge(want)
-	if got != want {
-		t.Fatalf("errutil.Merge(%v)=%v; want=%v", want, got, want)
-	}
-}
-
-func TestErrorMergingOnlyNilReturnsNil(t *testing.T) {
-	assert.NoError(t, errutil.Merge())
-	assert.NoError(t, errutil.Merge(nil))
-	assert.NoError(t, errutil.Merge(nil, nil))
-	assert.NoError(t, errutil.Merge(nil, nil, nil))
 }
 
 // To test the Is method the error must not be comparable.

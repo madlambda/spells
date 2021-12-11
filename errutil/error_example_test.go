@@ -48,7 +48,7 @@ func ExampleChain() {
 	// layer1Err: layer2Err: layer3Err
 }
 
-func ExampleMerge() {
+func ExampleReduce() {
 	// call multiple functions that may return an error
 	// but none of them should interrupt overall computation
 	var i int
@@ -63,9 +63,12 @@ func ExampleMerge() {
 	errs = append(errs, someFunc())
 	errs = append(errs, someFunc())
 
-	err := errutil.Merge(errs...)
+	err := errutil.Reduce(func(err1, err2 error) error {
+		return fmt.Errorf("%v,%v", err1, err2)
+	}, errs...)
+
 	fmt.Println(err)
 
 	// Output:
-	// error 1: error 2: error 3
+	// error 1,error 2,error 3
 }
