@@ -266,10 +266,20 @@ func TestErrorReducing(t *testing.T) {
 
 	tests := []testcase{
 		{
-			name:   "reducing one error",
-			errs:   []error{errors.New("one")},
-			reduce: mergeWithComma,
-			want:   "one",
+			name: "reducing empty err list wont call reducer and returns nil",
+			errs: []error{},
+			reduce: func(err1, err2 error) error {
+				panic("unreachable")
+			},
+			wantNil: true,
+		},
+		{
+			name: "reducing one error wont call reducer and returns error",
+			errs: []error{errors.New("one")},
+			reduce: func(err1, err2 error) error {
+				panic("should not be called")
+			},
+			want: "one",
 		},
 		{
 			name:   "reducing two errors",
@@ -339,22 +349,6 @@ func TestErrorReducing(t *testing.T) {
 			},
 			reduce: func(err1, err2 error) error {
 				return nil
-			},
-			wantNil: true,
-		},
-		{
-			name: "reduces single err to nil",
-			errs: []error{errors.New("one")},
-			reduce: func(err1, err2 error) error {
-				return nil
-			},
-			wantNil: true,
-		},
-		{
-			name: "reduces empty err list to nil",
-			errs: []error{},
-			reduce: func(err1, err2 error) error {
-				panic("unreachable")
 			},
 			wantNil: true,
 		},

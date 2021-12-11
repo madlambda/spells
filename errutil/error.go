@@ -54,21 +54,16 @@ func Chain(errs ...error) error {
 // If errs is empty it returns nil, if errs has a single err
 // (len(errs) == 1) it will return the err itself.
 //
-// It won't assume anything else about the given errs, always
-// calling the reduce function, so nil errs on will be passed
-// to the reduce function so it can deal with them.
-func Reduce(reduce Reducer, errs ...error) error {
+// Nil errors on the errs args will be filtered out initially,
+// before reducing, so you can expect errors passed to the reducer
+// to be always non-nil.
+//
+// But if the reducer function itself returns nil, then the returned nil
+// won't be filtered and will be passed as an argument on the next
+// reducing step.
+func Reduce(r Reducer, errs ...error) error {
 	errs = removeNils(errs)
-
-	if len(errs) == 0 {
-		return nil
-	}
-	if len(errs) == 1 {
-		return errs[0]
-	}
-	err1, err2 := errs[0], errs[1]
-	err := reduce(err1, err2)
-	return Reduce(reduce, append([]error{err}, errs[2:]...)...)
+	return reduce(r, errs...)
 }
 
 type errorChain struct {
@@ -104,4 +99,16 @@ func removeNils(errs []error) []error {
 		}
 	}
 	return res
+}
+
+func reduce(r Reducer, errs ...error) error {
+	if len(errs) == 0 {
+		return nil
+	}
+	if len(errs) == 1 {
+		return errs[0]
+	}
+	err1, err2 := errs[0], errs[1]
+	err := r(err1, err2)
+	return reduce(r, append([]error{err}, errs[2:]...)...)
 }
