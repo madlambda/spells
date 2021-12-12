@@ -251,9 +251,228 @@ func TestErrorChainRespectIsMethodOfChainedErrors(t *testing.T) {
 	}
 }
 
-// To test the Is method the error must not be comparable.
+func TestErrorReducing(t *testing.T) {
+	type testcase struct {
+		name    string
+		errs    []error
+		reduce  errutil.Reducer
+		want    string
+		wantNil bool
+	}
+
+	mergeWithComma := func(err1, err2 error) error {
+		return fmt.Errorf("%v,%v", err1, err2)
+	}
+
+	tests := []testcase{
+		{
+			name: "reducing empty err list wont call reducer and returns nil",
+			errs: []error{},
+			reduce: func(err1, err2 error) error {
+				panic("unreachable")
+			},
+			wantNil: true,
+		},
+		{
+			name: "reducing one error wont call reducer and returns error",
+			errs: []error{errors.New("one")},
+			reduce: func(err1, err2 error) error {
+				panic("should not be called")
+			},
+			want: "one",
+		},
+		{
+			name:   "reducing two errors",
+			errs:   []error{errors.New("one"), errors.New("two")},
+			reduce: mergeWithComma,
+			want:   "one,two",
+		},
+		{
+			name: "reducing three errors",
+			errs: []error{
+				errors.New("one"),
+				errors.New("two"),
+				errors.New("three"),
+			},
+			reduce: mergeWithComma,
+			want:   "one,two,three",
+		},
+		{
+			name: "filtering just first err of 3",
+			errs: []error{
+				errors.New("one"),
+				errors.New("two"),
+				errors.New("three"),
+			},
+			reduce: func(err1, err2 error) error {
+				return err1
+			},
+			want: "one",
+		},
+		{
+			name: "filtering just first err of single err",
+			errs: []error{errors.New("one")},
+			reduce: func(err1, err2 error) error {
+				return err1
+			},
+			want: "one",
+		},
+		{
+			name: "filtering just second err",
+			errs: []error{
+				errors.New("one"),
+				errors.New("two"),
+				errors.New("three"),
+			},
+			reduce: func(err1, err2 error) error {
+				return err2
+			},
+			want: "three",
+		},
+		{
+			name: "reduces 3 errs to nil",
+			errs: []error{
+				errors.New("one"),
+				errors.New("two"),
+				errors.New("three"),
+			},
+			reduce: func(err1, err2 error) error {
+				return nil
+			},
+			wantNil: true,
+		},
+		{
+			name: "reduces 2 errs to nil",
+			errs: []error{
+				errors.New("one"),
+				errors.New("two"),
+			},
+			reduce: func(err1, err2 error) error {
+				return nil
+			},
+			wantNil: true,
+		},
+		{
+			name: "first is nil",
+			errs: []error{
+				nil,
+				errors.New("error 2"),
+				errors.New("error 3"),
+			},
+			reduce: mergeWithComma,
+			want:   "error 2,error 3",
+		},
+		{
+			name: "second is nil",
+			errs: []error{
+				errors.New("error 1"),
+				nil,
+				errors.New("error 3"),
+			},
+			reduce: mergeWithComma,
+			want:   "error 1,error 3",
+		},
+		{
+			name: "third is nil",
+			errs: []error{
+				errors.New("error 1"),
+				errors.New("error 2"),
+				nil,
+			},
+			reduce: mergeWithComma,
+			want:   "error 1,error 2",
+		},
+		{
+			name: "multiple nils interleaved",
+			errs: []error{
+				nil,
+				nil,
+				nil,
+				errors.New("error 1"),
+				nil,
+				nil,
+				errors.New("error 2"),
+				nil,
+				nil,
+			},
+			reduce: mergeWithComma,
+			want:   "error 1,error 2",
+		},
+		{
+			name: "first err among nils",
+			errs: []error{
+				errors.New("error 1"),
+				nil,
+				nil,
+				nil,
+			},
+			reduce: mergeWithComma,
+			want:   "error 1",
+		},
+		{
+			name: "last err among nils",
+			errs: []error{
+				nil,
+				nil,
+				nil,
+				errors.New("error 1"),
+			},
+			reduce: mergeWithComma,
+			want:   "error 1",
+		},
+		{
+			name: "reduces list with nils to nil",
+			errs: []error{
+				nil,
+				nil,
+				nil,
+			},
+			reduce:  mergeWithComma,
+			wantNil: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			g := errutil.Reduce(test.reduce, test.errs...)
+
+			if test.wantNil {
+				if g == nil {
+					return
+				}
+				t.Fatalf(
+					"errutil.Reduce(%v)=%q; want nil",
+					test.errs,
+					g,
+				)
+			}
+
+			if g == nil {
+				t.Fatalf(
+					"errutil.Reduce(%v)=nil; want %q",
+					test.errs,
+					test.want,
+				)
+			}
+
+			got := g.Error()
+			want := test.want
+
+			if got != want {
+				t.Fatalf(
+					"errutil.Reduce(%v)=%q; want=%q",
+					test.errs,
+					got,
+					want,
+				)
+			}
+		})
+	}
+}
+
+// To test the Is method the error base type must not be comparable.
 // If it is comparable, Go always just compares it, the Is method
-// is just a fallback, not an override of actual behavior.
+// is just a fallback, not an override of actual comparison behavior.
 type errorThatNeverIs []string
 
 func (e errorThatNeverIs) Is(err error) bool {

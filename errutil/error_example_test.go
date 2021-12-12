@@ -39,9 +39,36 @@ func ExampleChain() {
 	fmt.Println(errors.Is(err, layer1Err))
 	fmt.Println(errors.Is(err, layer2Err))
 	fmt.Println(errors.Is(err, layer3Err))
+	fmt.Println(err)
 
 	// Output:
 	// true
 	// true
 	// true
+	// layer1Err: layer2Err: layer3Err
+}
+
+func ExampleReduce() {
+	// call multiple functions that may return an error
+	// but none of them should interrupt overall computation
+	var i int
+	someFunc := func() error {
+		i++
+		return fmt.Errorf("error %d", i)
+	}
+
+	var errs []error
+
+	errs = append(errs, someFunc())
+	errs = append(errs, someFunc())
+	errs = append(errs, someFunc())
+
+	err := errutil.Reduce(func(err1, err2 error) error {
+		return fmt.Errorf("%v,%v", err1, err2)
+	}, errs...)
+
+	fmt.Println(err)
+
+	// Output:
+	// error 1,error 2,error 3
 }

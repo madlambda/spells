@@ -4,6 +4,11 @@
 // Utilities include:
 //
 // - An error type that makes it easy to work with const error sentinels.
+// - An easy way to wrap a list of errors together.
+// - An easy way to reduce a list of errors.
+//
+// Flexible enough that you can do your own wrapping/merging logic
+// but in a functional/simple way.
 package errutil
 
 import "errors"
@@ -13,6 +18,9 @@ import "errors"
 // at compile time as constants. It does so by using a string
 // as it's base type.
 type Error string
+
+// Reducer reduces 2 errors into one
+type Reducer func(error, error) error
 
 // Error return a string representation of the error.
 func (e Error) Error() string {
@@ -38,6 +46,24 @@ func Chain(errs ...error) error {
 		head: errs[0],
 		tail: Chain(errs[1:]...),
 	}
+}
+
+// Reduce will reduce all errors to a single one using the
+// provided reduce function.
+//
+// If errs is empty it returns nil, if errs has a single err
+// (len(errs) == 1) it will return the err itself.
+//
+// Nil errors on the errs args will be filtered out initially,
+// before reducing, so you can expect errors passed to the reducer
+// to be always non-nil.
+//
+// But if the reducer function itself returns nil, then the returned nil
+// won't be filtered and will be passed as an argument on the next
+// reducing step.
+func Reduce(r Reducer, errs ...error) error {
+	errs = removeNils(errs)
+	return reduce(r, errs...)
 }
 
 type errorChain struct {
@@ -73,4 +99,16 @@ func removeNils(errs []error) []error {
 		}
 	}
 	return res
+}
+
+func reduce(r Reducer, errs ...error) error {
+	if len(errs) == 0 {
+		return nil
+	}
+	if len(errs) == 1 {
+		return errs[0]
+	}
+	err1, err2 := errs[0], errs[1]
+	err := r(err1, err2)
+	return reduce(r, append([]error{err}, errs[2:]...)...)
 }
