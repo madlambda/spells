@@ -30,7 +30,7 @@ jobs:
         with:
           directory: .
           files: ./coverage.txt
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           flags: tests
           name: codecov-umbrella
           path_to_write_report: ./coverage/codecov_report.txt
