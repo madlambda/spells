@@ -2,6 +2,7 @@ package assert_test
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/madlambda/spells/assert"
@@ -9,87 +10,97 @@ import (
 
 func TestPartial(t *testing.T) {
 	type testcase struct {
+		name   string
 		obj    interface{}
 		target interface{}
-		msg    string
 		fail   bool
 	}
 
-	t.Parallel()
-
 	for _, tc := range []testcase{
 		{
+			name:   "same numbers",
 			obj:    1,
 			target: 1,
-			msg:    "same numbers",
 		},
 		{
+			name:   "different int64 numbers - bigger than int32",
+			obj:    int64(math.MaxInt32 + 1),
+			target: int64(math.MaxInt32 + 2),
+			fail:   true,
+		},
+		{
+			name:   "same uint64 numbers - bigger than int64",
+			obj:    uint64(9223372036854775807),
+			target: uint64(9223372036854775807 + 1),
+			fail:   true,
+		},
+		{
+			name:   "numbers mismatch",
 			obj:    1,
 			target: 0,
-			msg:    "numbers mismatch",
 			fail:   true,
 		},
 		{
+			name:   "same bool",
 			obj:    true,
 			target: true,
-			msg:    "bool mismatch",
 		},
 		{
+			name:   "bool mismatch",
 			obj:    true,
 			target: false,
-			msg:    "bool mismatch",
 			fail:   true,
 		},
 		{
+			name:   "same empty struct",
 			obj:    struct{}{},
 			target: struct{}{},
-			msg:    "empty struct mismatch",
 		},
 		{
+			name: "different number of fields",
 			obj: struct {
 				A int
 			}{},
 			target: struct{}{},
-			msg:    "different number of field",
 			fail:   true,
 		},
 		{
+			name: "different field types",
 			obj: struct {
 				A int
 			}{},
 			target: struct {
 				B string
 			}{},
-			msg:  "different field types",
 			fail: true,
 		},
 		{
+			name: "same struct types different field names",
 			obj: struct {
 				A int
 			}{},
 			target: struct {
 				B int
 			}{},
-			msg:  "same struct types different field names",
 			fail: true,
 		},
 		{
+			name: "same struct value",
 			obj: struct {
 				A int
 			}{1},
 			target: struct {
 				A int
 			}{1},
-			msg: "same struct value",
 		},
 		{
+			name: "different struct field value",
 			obj: struct {
 				A string
 			}{"test"},
 			target: struct {
 				A string
 			}{"test2"},
-			msg:  "different struct field value",
 			fail: true,
 		},
 		{
@@ -99,27 +110,79 @@ func TestPartial(t *testing.T) {
 			target: struct {
 				A string
 			}{"test"},
-			msg: "same struct field value",
+			name: "same struct field value",
 		},
 		{
+			name: "field contains",
 			obj: struct {
 				A string
 			}{"testing"},
 			target: struct {
 				A string
 			}{"test"},
-			msg: "field contains",
+		},
+		{
+			name: "different nested struct",
+			obj: struct {
+				A string
+				B struct {
+					C int
+				}
+			}{
+				A: "testing",
+				B: struct {
+					C int
+				}{1},
+			},
+			target: struct {
+				A string
+				B struct {
+					C int
+				}
+			}{
+				A: "testing",
+				B: struct {
+					C int
+				}{2},
+			},
+			fail: true,
+		},
+		{
+			name: "different nested string contains",
+			obj: struct {
+				A string
+				B struct {
+					C string
+				}
+			}{
+				A: "testing",
+				B: struct {
+					C string
+				}{"ABCDEFG"},
+			},
+			target: struct {
+				A string
+				B struct {
+					C string
+				}
+			}{
+				A: "testing",
+				B: struct {
+					C string
+				}{"ABCDEF"},
+			},
 		},
 	} {
-		t.Run(tc.msg, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			assert := assert.New(t, func(assert *assert.Assert, details ...interface{}) {
 				if !tc.fail {
-					t.Fatalf("unexpected fail: %s.%s", tc.msg, errordetails(details...))
+					t.Fatalf("unexpected fail: %s.%s", tc.name, errordetails(details...))
 				}
-			})
-			assert.Partial(tc.obj, tc.target, tc.msg)
+			}, tc.name)
+			assert.Partial(tc.obj, tc.target)
 			if assert.Success() != !tc.fail {
-				t.Fatalf("unexpected assert result: %t", assert.Success())
+				t.Fatalf("assert.Success() is %t but should be %t",
+					assert.Success(), !tc.fail)
 			}
 		})
 	}

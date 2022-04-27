@@ -39,6 +39,17 @@ func (assert *Assert) EqualInts(want int, got int, details ...interface{}) {
 	}
 }
 
+// EqualUints compares the two uint64s for equality.
+// If they are not equal t.Fatal is called using the details parameter.
+// The details parameter can be a single string of a format string + parameters.
+func (assert *Assert) EqualUints(want uint64, got uint64, details ...interface{}) {
+	assert.t.Helper()
+	if want != got {
+		detail := errordetails(details...)
+		assert.fail("wanted[%d] but got[%d].%s", want, got, detail)
+	}
+}
+
 // EqualInts compares the two ints for equality.
 // If they are not equal t.Fatal is called using the details parameter.
 // The details parameter can be a single string of a format string + parameters.

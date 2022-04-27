@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func (assert *Assert) Partial(obj interface{}, target interface{}, details ...interface{}) {
+func (assert *Assert) Partial(obj interface{}, target interface{}) {
 	elem := reflect.ValueOf(obj)
 	targ := reflect.ValueOf(target)
 
@@ -25,12 +25,13 @@ func (assert *Assert) Partial(obj interface{}, target interface{}, details ...in
 		assert.Bool(targ.Bool(), elem.Bool(), "boolean mismatch")
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
 		// TODO(i4k): properly compare without conversion.
-		assert.EqualInts(int(targ.Int()), int(elem.Int()), details...)
+		assert.EqualInts(int(targ.Int()), int(elem.Int()), "int mismatch")
+	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		assert.EqualUints(uint64(targ.Uint()), uint64(elem.Uint()), "uint mismatch")
 	case reflect.String:
-		assert.StringContains(elem.String(), targ.String(), details...)
+		assert.StringContains(elem.String(), targ.String(), "string mismatch")
 	case reflect.Struct:
-		assert.True(targ.Type().Name() == elem.Type().Name(), "struct type mismatch")
-		assert.partialStruct(elem, targ, details...)
+		assert.partialStruct(elem, targ, "struct mismatch")
 	default:
 		assert.t.Fatalf("Partial does not support comparing %s", targ.Kind())
 	}
@@ -40,6 +41,8 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 	objtype := obj.Type()
 	targtype := target.Type()
 
+	assert.True(targtype.Name() == objtype.Name(), "struct type mismatch.%s",
+		errordetails(details...))
 	assert.EqualInts(obj.NumField(), target.NumField(),
 		"number of struct fields mismatch.%s", errordetails(details...))
 
@@ -65,11 +68,11 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 			errordetails(details...),
 		)
 
-		assert.Partial(obj.Field(i).Interface(), target.Field(i).Interface(), details...)
+		assert.Partial(obj.Field(i).Interface(), target.Field(i).Interface())
 	}
 }
 
 func Partial(t *testing.T, obj interface{}, target interface{}, details ...interface{}) {
 	assert := New(t, Fatal)
-	assert.Partial(obj, target, details...)
+	assert.Partial(obj, target)
 }
