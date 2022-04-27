@@ -60,7 +60,7 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 	objtype := obj.Type()
 	targtype := target.Type()
 
-	EqualInts(assert.t, obj.NumField(), target.NumField(),
+	assert.EqualInts(obj.NumField(), target.NumField(),
 		"number of struct fields mismatch.%s", errordetails(details...))
 
 	for i := 0; i < target.NumField(); i++ {
