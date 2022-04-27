@@ -52,6 +52,17 @@ func TestPartial(t *testing.T) {
 			fail:   true,
 		},
 		{
+			name:   "same floats",
+			obj:    1.2,
+			target: 1.2,
+		},
+		{
+			name:   "different floats",
+			obj:    1.3,
+			target: 1.2,
+			fail:   true,
+		},
+		{
 			name:   "same empty struct",
 			obj:    struct{}{},
 			target: struct{}{},
@@ -120,6 +131,16 @@ func TestPartial(t *testing.T) {
 			target: struct {
 				A string
 			}{"test"},
+		},
+		{
+			name: "field not contains",
+			obj: struct {
+				A string
+			}{"testing"},
+			target: struct {
+				A string
+			}{"ABC"},
+			fail: true,
 		},
 		{
 			name: "different nested struct",

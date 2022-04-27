@@ -24,10 +24,11 @@ func (assert *Assert) Partial(obj interface{}, target interface{}) {
 	case reflect.Bool:
 		assert.Bool(targ.Bool(), elem.Bool(), "boolean mismatch")
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
-		// TODO(i4k): properly compare without conversion.
 		assert.EqualInts(int(targ.Int()), int(elem.Int()), "int mismatch")
 	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		assert.EqualUints(uint64(targ.Uint()), uint64(elem.Uint()), "uint mismatch")
+	case reflect.Float32, reflect.Float64:
+		assert.EqualFloats(targ.Float(), elem.Float())
 	case reflect.String:
 		assert.StringContains(elem.String(), targ.String(), "string mismatch")
 	case reflect.Struct:

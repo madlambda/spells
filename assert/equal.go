@@ -62,14 +62,21 @@ func EqualInts(t *testing.T, want int, got int, details ...interface{}) {
 // EqualFloats compares the two floats for equality.
 // If they are not equal t.Fatal is called using the details parameter.
 // The details parameter can be a single string of a format string + parameters.
-func EqualFloats(t *testing.T, want, got float64, details ...interface{}) {
-	t.Helper()
-
+func (assert *Assert) EqualFloats(want float64, got float64, details ...interface{}) {
+	assert.t.Helper()
 	if !floatEqual(want, got) {
 		detail := errordetails(details...)
-		t.Fatalf("wanted[%f] but got[%f].%s",
-			want, got, detail)
+		assert.fail("wanted[%f] but got[%f].%s", want, got, detail)
 	}
+}
+
+// EqualFloats compares the two floats for equality.
+// If they are not equal t.Fatal is called using the details parameter.
+// The details parameter can be a single string of a format string + parameters.
+func EqualFloats(t *testing.T, want, got float64, details ...interface{}) {
+	t.Helper()
+	assert := New(t, Fatal)
+	assert.EqualFloats(want, got)
 }
 
 // EqualErrs compares if two errors have the same error description (by calling .Error()).
