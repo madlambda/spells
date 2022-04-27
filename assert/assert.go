@@ -49,7 +49,6 @@ func Fatal(assert *Assert, details ...interface{}) {
 
 func Err(assert *Assert, details ...interface{}) {
 	assert.t.Helper()
-	assert.Failures++
 	assert.t.Errorf("%s.%s", errordetails(details...), errordetails(assert.details...))
 }
 
