@@ -74,6 +74,6 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 }
 
 func Partial(t *testing.T, obj interface{}, target interface{}, details ...interface{}) {
-	assert := New(t, Fatal)
+	assert := New(t, Fatal, details...)
 	assert.Partial(obj, target)
 }
