@@ -11,11 +11,31 @@ var ε = math.Nextafter(1, 2) - 1
 // EqualStrings compares the two strings for equality.
 // If they are not equal t.Fatal is called using the details parameter.
 // The details parameter can be a single string of a format string + parameters.
-func EqualStrings(t *testing.T, want string, got string, details ...interface{}) {
-	t.Helper()
+func (assert *Assert) EqualStrings(want string, got string, details ...interface{}) {
+	assert.t.Helper()
 	if want != got {
 		detail := errordetails(details...)
-		t.Fatalf("wanted[%s] but got[%s].%s", want, got, detail)
+		assert.fail("wanted[%s] but got[%s].%s", want, got, detail)
+	}
+}
+
+// EqualStrings compares the two strings for equality.
+// If they are not equal t.Fatal is called using the details parameter.
+// The details parameter can be a single string of a format string + parameters.
+func EqualStrings(t *testing.T, want string, got string, details ...interface{}) {
+	t.Helper()
+	assert := New(t, Fatal)
+	assert.EqualStrings(want, got, details...)
+}
+
+// EqualInts compares the two ints for equality.
+// If they are not equal t.Fatal is called using the details parameter.
+// The details parameter can be a single string of a format string + parameters.
+func (assert *Assert) EqualInts(want int, got int, details ...interface{}) {
+	assert.t.Helper()
+	if want != got {
+		detail := errordetails(details...)
+		assert.fail("wanted[%d] but got[%d].%s", want, got, detail)
 	}
 }
 
@@ -24,10 +44,8 @@ func EqualStrings(t *testing.T, want string, got string, details ...interface{})
 // The details parameter can be a single string of a format string + parameters.
 func EqualInts(t *testing.T, want int, got int, details ...interface{}) {
 	t.Helper()
-	if want != got {
-		detail := errordetails(details...)
-		t.Fatalf("wanted[%d] but got[%d].%s", want, got, detail)
-	}
+	assert := New(t, Fatal)
+	assert.EqualInts(want, got, details...)
 }
 
 // EqualFloats compares the two floats for equality.
