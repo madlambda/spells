@@ -96,7 +96,7 @@ func TestPartial(t *testing.T) {
 			fail: true,
 		},
 		{
-			name: "same struct value",
+			name: "same struct int value",
 			obj: struct {
 				A int
 			}{1},
