@@ -9,20 +9,20 @@ func (assert *Assert) Partial(obj interface{}, target interface{}) {
 	elem := reflect.ValueOf(obj)
 	targ := reflect.ValueOf(target)
 
-	assert.True(elem.Kind() == targ.Kind(), "wanted object type[%s] but got[%s]",
+	assert.IsTrue(elem.Kind() == targ.Kind(), "wanted object type[%s] but got[%s]",
 		targ.Kind(), elem.Kind())
 
 	if targ.Kind() == reflect.Ptr {
 		elem = elem.Elem()
 		targ = targ.Elem()
 
-		assert.True(elem.Kind() == targ.Kind(), "wanted object type[%s] but got[%s]",
+		assert.IsTrue(elem.Kind() == targ.Kind(), "wanted object type[%s] but got[%s]",
 			targ.Kind(), elem.Kind())
 	}
 
 	switch targ.Kind() {
 	case reflect.Bool:
-		assert.Bool(targ.Bool(), elem.Bool(), "boolean mismatch")
+		assert.EqualBools(targ.Bool(), elem.Bool(), "boolean mismatch")
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
 		assert.EqualInts(int(targ.Int()), int(elem.Int()), "int mismatch")
 	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
@@ -42,7 +42,7 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 	objtype := obj.Type()
 	targtype := target.Type()
 
-	assert.True(targtype.Name() == objtype.Name(), "struct type mismatch.%s",
+	assert.IsTrue(targtype.Name() == objtype.Name(), "struct type mismatch.%s",
 		errordetails(details...))
 	assert.EqualInts(obj.NumField(), target.NumField(),
 		"number of struct fields mismatch.%s", errordetails(details...))
@@ -51,17 +51,17 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 		ofield := objtype.Field(i)
 		tfield := targtype.Field(i)
 
-		assert.Bool(ofield.Anonymous, tfield.Anonymous,
+		assert.EqualBools(ofield.Anonymous, tfield.Anonymous,
 			"embedded field and non-embedded field.%s", errordetails(details...))
 
-		assert.True(ofield.Type == tfield.Type,
+		assert.IsTrue(ofield.Type == tfield.Type,
 			"field type mismatch: index %d (%s.%s (%s) == %s.%s (%s).%s", i,
 			objtype.Name(), ofield.Name, ofield.Type,
 			targtype.Name(), tfield.Name, tfield.Type,
 			errordetails(details...),
 		)
 
-		assert.True(ofield.Name == tfield.Name,
+		assert.IsTrue(ofield.Name == tfield.Name,
 			"field name mismatch: index %d (%s.%s (%s) == %s.%s (%s).%s",
 			i,
 			objtype.Name(), ofield.Name, ofield.Type,

@@ -1,6 +1,7 @@
 package assert
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -13,10 +14,15 @@ type Assert struct {
 }
 
 // FailureReport is the function type used to report assert errors.
+// See assert.Fatal and assert.Err for implementations.
 type FailureReport func(assert *Assert, details ...interface{})
 
-// New creates a new assert helper object with a custom fail function and a
-// context message constructed from the optional details slice.
+// New creates a new assert helper object with a custom fail function and an
+// optional context detail.
+// For calling t.Fatal() or t.Error() in case of failures, see Fatal() and Err()
+// respectively.
+// Example:
+//   assert := assert.New(t, assert.Fatal)
 func New(t *testing.T, fail FailureReport, details ...interface{}) *Assert {
 	return &Assert{
 		t:        t,
@@ -31,29 +37,9 @@ func (assert *Assert) fail(details ...interface{}) {
 	assert.failfunc(assert, details...)
 }
 
-func (assert *Assert) Bool(want bool, got bool, details ...interface{}) {
-	assert.t.Helper()
-	if want != got {
-		assert.fail("want[%t] but got[%t].%s", want, got, errordetails(details...))
-	}
-}
-
-func (assert *Assert) True(b bool, details ...interface{}) {
-	assert.t.Helper()
-	assert.Bool(true, b, details...)
-}
-
-func (assert *Assert) False(b bool, details ...interface{}) {
-	assert.Bool(false, b, details...)
-}
-
+// Success tells if there was no assertion failure.
 func (assert *Assert) Success() bool {
 	return assert.Failures == 0
-}
-
-func True(t *testing.T, cond bool, details ...interface{}) {
-	assert := New(t, Fatal)
-	assert.True(cond, details...)
 }
 
 func Fatal(assert *Assert, details ...interface{}) {
@@ -65,4 +51,15 @@ func Err(assert *Assert, details ...interface{}) {
 	assert.t.Helper()
 	assert.Failures++
 	assert.t.Errorf("%s.%s", errordetails(details...), errordetails(assert.details...))
+}
+
+func errordetails(details ...interface{}) string {
+	if len(details) == 1 {
+		return details[0].(string)
+	}
+
+	if len(details) > 1 {
+		return fmt.Sprintf(details[0].(string), details[1:]...)
+	}
+	return ""
 }
