@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+// Assert is a custom assert helper.
 type Assert struct {
 	t        *testing.T
 	details  []interface{}
@@ -11,10 +12,11 @@ type Assert struct {
 	Failures int
 }
 
+// FailureReport is the function type used to report assert errors.
 type FailureReport func(assert *Assert, details ...interface{})
 
-// New creates a new assert helper object with the context message constructed
-// from the optional details slice.
+// New creates a new assert helper object with a custom fail function and a
+// context message constructed from the optional details slice.
 func New(t *testing.T, fail FailureReport, details ...interface{}) *Assert {
 	return &Assert{
 		t:        t,
