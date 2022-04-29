@@ -8,6 +8,24 @@ import (
 	"github.com/madlambda/spells/assert"
 )
 
+type testIface interface {
+	A() bool
+}
+
+type testStruct1 struct {
+	Val        int
+	IfaceField testIface
+}
+
+func (testStruct1) A() bool { return true }
+
+type testStruct2 struct {
+	Val        int
+	IfaceField testIface
+}
+
+func (testStruct2) A() bool { return true }
+
 func TestPartial(t *testing.T) {
 	type testcase struct {
 		name   string
@@ -68,12 +86,25 @@ func TestPartial(t *testing.T) {
 			target: struct{}{},
 		},
 		{
-			name: "different number of fields",
+			name: "struct with no fields match any struct",
 			obj: struct {
 				A int
 			}{},
 			target: struct{}{},
-			fail:   true,
+		},
+		{
+			name:   "different struct names",
+			obj:    testStruct1{},
+			target: testStruct2{},
+		},
+		{
+			name: "comparing different struct that fields match",
+			obj: testStruct1{
+				Val: 10,
+			},
+			target: struct {
+				Val int
+			}{10},
 		},
 		{
 			name: "different field types",
@@ -82,6 +113,16 @@ func TestPartial(t *testing.T) {
 			}{},
 			target: struct {
 				B string
+			}{},
+			fail: true,
+		},
+		{
+			name: "different unexported field types",
+			obj: struct {
+				a int
+			}{},
+			target: struct {
+				a string
 			}{},
 			fail: true,
 		},
@@ -115,13 +156,13 @@ func TestPartial(t *testing.T) {
 			fail: true,
 		},
 		{
+			name: "same struct field value",
 			obj: struct {
 				A string
 			}{"test"},
 			target: struct {
 				A string
 			}{"test"},
-			name: "same struct field value",
 		},
 		{
 			name: "field contains",
@@ -192,6 +233,106 @@ func TestPartial(t *testing.T) {
 					C string
 				}{"ABCDEF"},
 			},
+		},
+		{
+			name:   "same interfaces - sanity check",
+			obj:    testIface(testStruct1{}),
+			target: testIface(testStruct1{}),
+		},
+		{
+			name:   "same empty slices",
+			obj:    []int{},
+			target: []int{},
+		},
+		{
+			name:   "same slices",
+			obj:    []int{1},
+			target: []int{1},
+		},
+		{
+			name:   "same slices - contains target elements in order",
+			obj:    []int{1, 2, 3},
+			target: []int{1, 2},
+		},
+		{
+			name:   "same slices",
+			obj:    []string{"test"},
+			target: []string{"test"},
+		},
+		{
+			name:   "same slices with string contains",
+			obj:    []string{"testing"},
+			target: []string{"test"},
+		},
+		{
+			name:   "empty target slice matches any value",
+			obj:    []string{"test"},
+			target: []string{},
+		},
+		{
+			name: "struct with different slices",
+			obj: struct {
+				A []int
+			}{[]int{1, 2}},
+			target: struct {
+				A []int
+			}{[]int{1, 2}},
+		},
+		{
+			name:   "same maps",
+			obj:    map[int]int{},
+			target: map[int]int{},
+		},
+		{
+			name: "same maps with values",
+			obj: map[int]int{
+				1: 1,
+				3: 1,
+			},
+			target: map[int]int{
+				1: 1,
+				3: 1,
+			},
+		},
+		{
+			name: "same maps - obj contains target keys",
+			obj: map[int]int{
+				1:   1,
+				3:   1,
+				666: 666,
+			},
+			target: map[int]int{
+				1: 1,
+				3: 1,
+			},
+		},
+		{
+			name: "different maps - obj doesn't contains all target keys",
+			obj: map[int]int{
+				1:   1,
+				3:   1,
+				666: 666,
+			},
+			target: map[int]int{
+				1:   1,
+				3:   1,
+				667: 666,
+			},
+			fail: true,
+		},
+		{
+			name: "different maps - same keys, different value",
+			obj: map[int]int{
+				1:   1,
+				3:   1,
+				666: 666,
+			},
+			target: map[int]int{
+				1:   1,
+				3:   1,
+				666: 667,
+			},
+			fail: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

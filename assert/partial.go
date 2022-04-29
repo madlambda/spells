@@ -6,8 +6,15 @@ import (
 )
 
 func (assert *Assert) Partial(obj interface{}, target interface{}) {
+	assert.t.Helper()
 	elem := reflect.ValueOf(obj)
 	targ := reflect.ValueOf(target)
+
+	assert.EqualBools(targ.IsValid(), elem.IsValid(), "internal reflection property mismatch")
+
+	if !targ.IsValid() {
+		return
+	}
 
 	assert.IsTrue(elem.Kind() == targ.Kind(), "wanted object type[%s] but got[%s]",
 		targ.Kind(), elem.Kind())
@@ -18,6 +25,12 @@ func (assert *Assert) Partial(obj interface{}, target interface{}) {
 
 		assert.IsTrue(elem.Kind() == targ.Kind(), "wanted object type[%s] but got[%s]",
 			targ.Kind(), elem.Kind())
+
+		assert.EqualBools(targ.IsValid(), elem.IsValid(), "internal reflection property mismatch")
+
+		if !targ.IsValid() {
+			return
+		}
 	}
 
 	switch targ.Kind() {
@@ -33,19 +46,36 @@ func (assert *Assert) Partial(obj interface{}, target interface{}) {
 		assert.StringContains(elem.String(), targ.String(), "string mismatch")
 	case reflect.Struct:
 		assert.partialStruct(elem, targ, "struct mismatch")
+	case reflect.Slice:
+		assert.IsTrue(targ.Len() <= elem.Len(), "target length is bigger than object")
+		for i := 0; i < targ.Len(); i++ {
+			assert.Partial(elem.Index(i), targ.Index(i))
+		}
+	case reflect.Map:
+		assert.IsTrue(targ.Len() <= elem.Len(), "target has more map elements")
+		tkeys := targ.MapKeys()
+		for _, tkey := range tkeys {
+			tval := targ.MapIndex(tkey)
+			eval := elem.MapIndex(tkey)
+			if !eval.IsValid() {
+				assert.fail("target key %v not found in object", tkey)
+				continue
+			}
+			assert.Partial(tval.Interface(), eval.Interface())
+		}
 	default:
 		assert.t.Fatalf("Partial does not support comparing %s", targ.Kind())
 	}
 }
 
 func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, details ...interface{}) {
+	assert.t.Helper()
 	objtype := obj.Type()
 	targtype := target.Type()
 
-	assert.IsTrue(targtype.Name() == objtype.Name(), "struct type mismatch.%s",
+	assert.IsTrue(target.NumField() <= obj.NumField(),
+		"number of struct fields in bigger in the target struct.%s",
 		errordetails(details...))
-	assert.EqualInts(obj.NumField(), target.NumField(),
-		"number of struct fields mismatch.%s", errordetails(details...))
 
 	for i := 0; i < target.NumField(); i++ {
 		ofield := objtype.Field(i)
@@ -69,11 +99,16 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 			errordetails(details...),
 		)
 
-		assert.Partial(obj.Field(i).Interface(), target.Field(i).Interface())
+		assert.EqualBools(tfield.IsExported(), ofield.IsExported(), "IsExported mismatch")
+
+		if tfield.IsExported() {
+			assert.Partial(obj.Field(i).Interface(), target.Field(i).Interface())
+		}
 	}
 }
 
 func Partial(t *testing.T, obj interface{}, target interface{}, details ...interface{}) {
+	t.Helper()
 	assert := New(t, Fatal, details...)
 	assert.Partial(obj, target)
 }
