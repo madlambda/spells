@@ -15,7 +15,7 @@ type Assert struct {
 
 // FailureReport is the function type used to report assert errors.
 // See assert.Fatal and assert.Err for implementations.
-type FailureReport func(assert *Assert, details ...interface{})
+type FailureReport func(assert *Assert, message string)
 
 // New creates a new assert helper object with a custom fail function and an
 // optional context detail.
@@ -34,7 +34,13 @@ func New(t *testing.T, fail FailureReport, details ...interface{}) *Assert {
 func (assert *Assert) fail(details ...interface{}) {
 	assert.t.Helper()
 	assert.Failures++
-	assert.failfunc(assert, details...)
+
+	message := errordetails(details...)
+	if len(assert.details) > 0 {
+		message += fmt.Sprintf(": %s", errordetails(assert.details...))
+	}
+
+	assert.failfunc(assert, message)
 }
 
 // Success tells if there was no assertion failure.
@@ -42,14 +48,14 @@ func (assert *Assert) Success() bool {
 	return assert.Failures == 0
 }
 
-func Fatal(assert *Assert, details ...interface{}) {
+func Fatal(assert *Assert, message string) {
 	assert.t.Helper()
-	assert.t.Fatalf("%s.%s", errordetails(details...), errordetails(assert.details...))
+	assert.t.Fatal(message)
 }
 
-func Err(assert *Assert, details ...interface{}) {
+func Err(assert *Assert, message string) {
 	assert.t.Helper()
-	assert.t.Errorf("%s.%s", errordetails(details...), errordetails(assert.details...))
+	assert.t.Error(message)
 }
 
 func errordetails(details ...interface{}) string {

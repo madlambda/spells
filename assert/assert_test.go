@@ -1,7 +1,6 @@
 package assert_test
 
 import (
-	"fmt"
 	"math"
 	"testing"
 
@@ -336,9 +335,9 @@ func TestPartial(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			assert := assert.New(t, func(assert *assert.Assert, details ...interface{}) {
+			assert := assert.New(t, func(assert *assert.Assert, msg string) {
 				if !tc.fail {
-					t.Fatalf("unexpected fail: %s.%s", tc.name, errordetails(details...))
+					t.Fatalf("unexpected fail: %s: %s", tc.name, msg)
 				}
 			}, tc.name)
 			assert.Partial(tc.obj, tc.target)
@@ -348,15 +347,4 @@ func TestPartial(t *testing.T) {
 			}
 		})
 	}
-}
-
-func errordetails(details ...interface{}) string {
-	if len(details) == 1 {
-		return details[0].(string)
-	}
-
-	if len(details) > 1 {
-		return fmt.Sprintf(details[0].(string), details[1:]...)
-	}
-	return ""
 }
