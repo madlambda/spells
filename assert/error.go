@@ -10,7 +10,7 @@ import (
 func (assert *Assert) NoError(err error, details ...interface{}) {
 	assert.t.Helper()
 	if err != nil {
-		assert.fail("unexpected error[%s].%s", err, errordetails(details...))
+		assert.fail(details, "unexpected error[%s]%s", err)
 	}
 }
 
@@ -22,13 +22,19 @@ func NoError(t *testing.T, err error, details ...interface{}) {
 	assert.NoError(err, details...)
 }
 
-// Error will call Fatal if the given error is nil.
-// The details parameter can be a single string of a format string + parameters.
+// Error will call the failure function with the given details if the error is nil.
+func (assert *Assert) Error(err error, details ...interface{}) {
+	assert.t.Helper()
+	if err == nil {
+		assert.fail(details, "expected error, got nil")
+	}
+}
+
+// Error will call Fatal with the given details if the error is nil.
 func Error(t *testing.T, err error, details ...interface{}) {
 	t.Helper()
-	if err == nil {
-		t.Fatalf("expected error, got nil.%s", errordetails(details...))
-	}
+	assert := New(t, Fatal)
+	assert.Error(err, details...)
 }
 
 // IsError will assert if the given error matches the want error.
@@ -37,7 +43,7 @@ func Error(t *testing.T, err error, details ...interface{}) {
 func (assert *Assert) IsError(got, want error, details ...interface{}) {
 	assert.t.Helper()
 	if !errors.Is(got, want) {
-		assert.fail("got [%v] but wanted [%v]: %s", got, want, errordetails(details...))
+		assert.fail(details, "got [%v] but wanted [%v]", got, want)
 	}
 }
 

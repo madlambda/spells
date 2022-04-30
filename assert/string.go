@@ -9,17 +9,17 @@ import (
 // StringContains asserts that string s contains the subst string and calls
 // the failure function with details otherwise.
 func (assert *Assert) StringContains(s string, substr string, details ...interface{}) {
-	assert.IsTrue(strings.Contains(s, substr), "strings.Contains(%q, %q).%s",
-		s, substr, errordetails(details...))
+	assert.IsTrue(strings.Contains(s, substr),
+		errctx(details, "strings.Contains(%q, %q)",
+			s, substr))
 }
 
 // StringMatch asserts that string matches the regex pattern and calls
 // the failure function with details otherwise.
 func (assert *Assert) StringMatch(pattern string, str string, details ...interface{}) {
-	matched, err := regexp.MatchString(pattern, str)
-	assert.IsFalse(err != nil, "err != nil. %v", pattern, err)
-	assert.IsTrue(matched, "pattern[%s] not found in [%s].%s",
-		pattern, str, errordetails(details...))
+	found, err := regexp.MatchString(pattern, str)
+	assert.NoError(err, errctx(details, "failed to build regexp pattern %q", pattern))
+	assert.IsTrue(found, errctx(details, "pattern[%s] not found in [%s]", pattern, str))
 }
 
 // StringContains asserts that string s contains the subst string and calls

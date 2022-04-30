@@ -5,28 +5,36 @@ import (
 	"testing"
 )
 
-func (assert *Assert) Partial(obj interface{}, target interface{}) {
+// Partial recursively asserts that obj partially matches target.
+// Below are the assertion rules:
+// - booleans, integers, floats and complex numbers must be equal.
+// - strings, slices, array and map: the obj must contains the target.
+// - structs: the obj fields must recursively match the target fields.
+func (assert *Assert) Partial(obj, target interface{}, details ...interface{}) {
 	assert.t.Helper()
 	elem := reflect.ValueOf(obj)
 	targ := reflect.ValueOf(target)
 
-	assert.EqualBools(targ.IsValid(), elem.IsValid(), "internal reflection property mismatch")
+	assert.failif(targ.IsValid() != elem.IsValid(),
+		details, "internal reflection property mismatch")
 
 	if !targ.IsValid() {
 		return
 	}
 
-	assert.IsTrue(elem.Kind() == targ.Kind(), "wanted object type[%s] but got[%s]",
-		targ.Kind(), elem.Kind())
+	assert.failif(elem.Kind() != targ.Kind(), details,
+		"wanted object kind[%s] but got[%s]", targ.Kind(), elem.Kind(),
+	)
 
 	if targ.Kind() == reflect.Ptr {
 		elem = elem.Elem()
 		targ = targ.Elem()
 
-		assert.IsTrue(elem.Kind() == targ.Kind(), "wanted object type[%s] but got[%s]",
-			targ.Kind(), elem.Kind())
+		assert.failif(elem.Kind() != targ.Kind(), details,
+			"wanted object type[%s] but got[%s]", targ.Kind(), elem.Kind())
 
-		assert.EqualBools(targ.IsValid(), elem.IsValid(), "internal reflection property mismatch")
+		assert.failif(targ.IsValid() != elem.IsValid(), details,
+			"internal reflection property mismatch")
 
 		if !targ.IsValid() {
 			return
@@ -35,33 +43,52 @@ func (assert *Assert) Partial(obj interface{}, target interface{}) {
 
 	switch targ.Kind() {
 	case reflect.Bool:
-		assert.EqualBools(targ.Bool(), elem.Bool(), "boolean mismatch")
+		assert.EqualBools(targ.Bool(), elem.Bool(),
+			errctx(details, "boolean mismatch"))
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
-		assert.EqualInts(int(targ.Int()), int(elem.Int()), "int mismatch")
+		assert.EqualInts(int(targ.Int()), int(elem.Int()),
+			errctx(details, "int mismatch"))
 	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		assert.EqualUints(uint64(targ.Uint()), uint64(elem.Uint()), "uint mismatch")
+		assert.EqualUints(uint64(targ.Uint()), uint64(elem.Uint()),
+			errctx(details, "uint mismatch"))
 	case reflect.Float32, reflect.Float64:
-		assert.EqualFloats(targ.Float(), elem.Float())
+		assert.EqualFloats(targ.Float(), elem.Float(),
+			errctx(details, "float mismatch"))
+	case reflect.Complex64, reflect.Complex128:
+		assert.EqualComplexes(targ.Complex(), elem.Complex(),
+			errctx(details, "complex numbers mismatch"))
 	case reflect.String:
-		assert.StringContains(elem.String(), targ.String(), "string mismatch")
+		assert.StringContains(elem.String(), targ.String(),
+			errctx(details, "string mismatch"))
 	case reflect.Struct:
-		assert.partialStruct(elem, targ, "struct mismatch")
+		assert.partialStruct(elem, targ,
+			errctx(details, "struct mismatch"))
 	case reflect.Slice:
-		assert.IsTrue(targ.Len() <= elem.Len(), "target length is bigger than object")
+		assert.failif(targ.Len() > elem.Len(), details,
+			"target length is bigger than object")
 		for i := 0; i < targ.Len(); i++ {
-			assert.Partial(elem.Index(i), targ.Index(i))
+			assert.Partial(elem.Index(i), targ.Index(i),
+				errctx(details, "slice index %d mismatch", i))
+		}
+	case reflect.Array:
+		assert.failif(targ.Len() > elem.Len(), details,
+			"target length is bigger than object")
+		for i := 0; i < targ.Len(); i++ {
+			assert.Partial(elem.Index(i), targ.Index(i),
+				errctx(details, "array index %d mismatch", i))
 		}
 	case reflect.Map:
-		assert.IsTrue(targ.Len() <= elem.Len(), "target has more map elements")
+		assert.failif(targ.Len() > elem.Len(), details, "target map has more keys")
 		tkeys := targ.MapKeys()
 		for _, tkey := range tkeys {
 			tval := targ.MapIndex(tkey)
 			eval := elem.MapIndex(tkey)
 			if !eval.IsValid() {
-				assert.fail("target key %v not found in object", tkey)
+				assert.fail(details, "target key %v not found in object", tkey)
 				continue
 			}
-			assert.Partial(tval.Interface(), eval.Interface())
+			assert.Partial(tval.Interface(), eval.Interface(),
+				errctx(details, "comparing map values"))
 		}
 	default:
 		assert.t.Fatalf("Partial does not support comparing %s", targ.Kind())
@@ -73,36 +100,35 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 	objtype := obj.Type()
 	targtype := target.Type()
 
-	assert.IsTrue(target.NumField() <= obj.NumField(),
-		"number of struct fields in bigger in the target struct.%s",
-		errordetails(details...))
+	assert.failif(target.NumField() > obj.NumField(),
+		details, "target.NumField() > obj.NumField()")
 
 	for i := 0; i < target.NumField(); i++ {
 		ofield := objtype.Field(i)
 		tfield := targtype.Field(i)
 
-		assert.EqualBools(ofield.Anonymous, tfield.Anonymous,
-			"embedded field and non-embedded field.%s", errordetails(details...))
+		assert.failif(ofield.Anonymous != tfield.Anonymous,
+			details, "embedded field and non-embedded field")
 
 		assert.IsTrue(ofield.Type == tfield.Type,
-			"field type mismatch: index %d (%s.%s (%s) == %s.%s (%s).%s", i,
-			objtype.Name(), ofield.Name, ofield.Type,
-			targtype.Name(), tfield.Name, tfield.Type,
-			errordetails(details...),
-		)
+			errctx(details,
+				"field type mismatch: index %d (%s.%s (%s) == %s.%s (%s)", i,
+				objtype.Name(), ofield.Name, ofield.Type,
+				targtype.Name(), tfield.Name, tfield.Type,
+			))
 
-		assert.IsTrue(ofield.Name == tfield.Name,
-			"field name mismatch: index %d (%s.%s (%s) == %s.%s (%s).%s",
-			i,
-			objtype.Name(), ofield.Name, ofield.Type,
-			targtype.Name(), tfield.Name, tfield.Type,
-			errordetails(details...),
-		)
-
-		assert.EqualBools(tfield.IsExported(), ofield.IsExported(), "IsExported mismatch")
+		assert.EqualStrings(tfield.Name, ofield.Name,
+			errctx(details,
+				"field name mismatch: index %d (%s.%s (%s) == %s.%s (%s)",
+				i,
+				objtype.Name(), ofield.Name, ofield.Type,
+				targtype.Name(), tfield.Name, tfield.Type,
+			))
 
 		if tfield.IsExported() {
-			assert.Partial(obj.Field(i).Interface(), target.Field(i).Interface())
+			assert.Partial(
+				obj.Field(i).Interface(), target.Field(i).Interface(),
+				errctx(details, "comparing struct field values"))
 		}
 	}
 }

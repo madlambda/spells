@@ -264,6 +264,11 @@ func TestPartial(t *testing.T) {
 			target: []string{"test"},
 		},
 		{
+			name:   "same arrays",
+			obj:    [2]string{"1", "2"},
+			target: [2]string{"1", "2"},
+		},
+		{
 			name:   "empty target slice matches any value",
 			obj:    []string{"test"},
 			target: []string{},
@@ -335,15 +340,17 @@ func TestPartial(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			failures := 0
 			assert := assert.New(t, func(assert *assert.Assert, msg string) {
+				failures++
 				if !tc.fail {
 					t.Fatalf("unexpected fail: %s: %s", tc.name, msg)
 				}
 			}, tc.name)
 			assert.Partial(tc.obj, tc.target)
-			if assert.Success() != !tc.fail {
-				t.Fatalf("assert.Success() is %t but should be %t",
-					assert.Success(), !tc.fail)
+			if failures > 0 != tc.fail {
+				t.Fatalf("there was %d errors but tc.fail is %t",
+					failures, tc.fail)
 			}
 		})
 	}
