@@ -133,7 +133,8 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 			targtype.Name(), tfield.Name, tfield.Type,
 		)
 
-		if tfield.IsExported() {
+		// tfield.IsExported() was introduced only in go1.17
+		if tfield.PkgPath == "" {
 			assert.Partial(
 				elem.Interface(), target.Field(i).Interface(),
 				errctx(details, "comparing struct field %s and %s",
