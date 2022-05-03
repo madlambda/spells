@@ -9,7 +9,7 @@ import (
 // Below are the assertion rules:
 // - booleans, integers, floats and complex numbers must be equal.
 // - strings, slices, array and map: the obj must contains the target.
-// - structs: the obj fields must recursively match the target fields.
+// - structs: the obj fields must recursively 8match the target fields.
 func (assert *Assert) Partial(obj, target interface{}, details ...interface{}) {
 	assert.t.Helper()
 	elem := reflect.ValueOf(obj)
@@ -104,18 +104,11 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 		details, "target.NumField() > obj.NumField()")
 
 	for i := 0; i < target.NumField(); i++ {
-		ofield := objtype.Field(i)
 		tfield := targtype.Field(i)
-
+		ofield, found := objtype.FieldByName(tfield.Name)
+		assert.failif(!found, details, "field %s not found in the object", tfield.Name)
 		assert.failif(ofield.Anonymous != tfield.Anonymous,
 			details, "embedded field and non-embedded field")
-
-		assert.IsTrue(ofield.Type == tfield.Type,
-			errctx(details,
-				"field type mismatch: index %d (%s.%s (%s) == %s.%s (%s)", i,
-				objtype.Name(), ofield.Name, ofield.Type,
-				targtype.Name(), tfield.Name, tfield.Type,
-			))
 
 		assert.EqualStrings(tfield.Name, ofield.Name,
 			errctx(details,
@@ -125,10 +118,27 @@ func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, det
 				targtype.Name(), tfield.Name, tfield.Type,
 			))
 
+		targ := target.Field(i)
+		elem := obj.FieldByName(tfield.Name)
+		assert.failif(!elem.IsValid(), details, "object field %q not found",
+			tfield.Name)
+
+		if !elem.IsValid() {
+			continue
+		}
+
+		assert.failif(targ.Type().Kind() != elem.Type().Kind(),
+			details, "kind mismatch for (%s.%s (%s)) and (%s.%s (%s))",
+			objtype.Name(), ofield.Name, ofield.Type,
+			targtype.Name(), tfield.Name, tfield.Type,
+		)
+
 		if tfield.IsExported() {
 			assert.Partial(
-				obj.Field(i).Interface(), target.Field(i).Interface(),
-				errctx(details, "comparing struct field values"))
+				elem.Interface(), target.Field(i).Interface(),
+				errctx(details, "comparing struct field %s and %s",
+					tfield.Name, ofield.Name))
+
 		}
 	}
 }
