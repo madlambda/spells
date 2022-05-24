@@ -123,7 +123,6 @@ func TestPartial(t *testing.T) {
 			target: struct {
 				a string
 			}{},
-			fail: true,
 		},
 		{
 			name: "same struct types different field names",

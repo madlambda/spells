@@ -61,20 +61,20 @@ func (assert *Assert) Partial(obj, target interface{}, details ...interface{}) {
 		assert.StringContains(elem.String(), targ.String(),
 			errctx(details, "string mismatch"))
 	case reflect.Struct:
-		assert.partialStruct(elem, targ,
+		assert.partialStruct(elem.Interface(), targ.Interface(),
 			errctx(details, "struct mismatch"))
 	case reflect.Slice:
 		assert.failif(targ.Len() > elem.Len(), details,
 			"target length is bigger than object")
 		for i := 0; i < targ.Len(); i++ {
-			assert.Partial(elem.Index(i), targ.Index(i),
+			assert.Partial(elem.Index(i).Interface(), targ.Index(i).Interface(),
 				errctx(details, "slice index %d mismatch", i))
 		}
 	case reflect.Array:
 		assert.failif(targ.Len() > elem.Len(), details,
 			"target length is bigger than object")
 		for i := 0; i < targ.Len(); i++ {
-			assert.Partial(elem.Index(i), targ.Index(i),
+			assert.Partial(elem.Index(i).Interface(), targ.Index(i).Interface(),
 				errctx(details, "array index %d mismatch", i))
 		}
 	case reflect.Map:
@@ -95,48 +95,45 @@ func (assert *Assert) Partial(obj, target interface{}, details ...interface{}) {
 	}
 }
 
-func (assert *Assert) partialStruct(obj reflect.Value, target reflect.Value, details ...interface{}) {
+func (assert *Assert) partialStruct(obj interface{}, target interface{}, details ...interface{}) {
 	assert.t.Helper()
-	objtype := obj.Type()
-	targtype := target.Type()
+	elem := reflect.ValueOf(obj)
+	targ := reflect.ValueOf(target)
+	objtype := elem.Type()
+	targtype := targ.Type()
 
-	assert.failif(target.NumField() > obj.NumField(),
+	assert.failif(targ.NumField() > elem.NumField(),
 		details, "target.NumField() > obj.NumField()")
 
-	for i := 0; i < target.NumField(); i++ {
+	for i := 0; i < targtype.NumField(); i++ {
 		tfield := targtype.Field(i)
 		ofield, found := objtype.FieldByName(tfield.Name)
+
 		assert.failif(!found, details, "field %s not found in the object", tfield.Name)
-		assert.failif(ofield.Anonymous != tfield.Anonymous,
-			details, "embedded field and non-embedded field")
 
-		assert.EqualStrings(tfield.Name, ofield.Name,
-			errctx(details,
-				"field name mismatch: index %d (%s.%s (%s) == %s.%s (%s)",
-				i,
-				objtype.Name(), ofield.Name, ofield.Type,
-				targtype.Name(), tfield.Name, tfield.Type,
-			))
-
-		targ := target.Field(i)
-		elem := obj.FieldByName(tfield.Name)
-		assert.failif(!elem.IsValid(), details, "object field %q not found",
-			tfield.Name)
-
-		if !elem.IsValid() {
+		if !found {
 			continue
 		}
 
-		assert.failif(targ.Type().Kind() != elem.Type().Kind(),
-			details, "kind mismatch for (%s.%s (%s)) and (%s.%s (%s))",
-			objtype.Name(), ofield.Name, ofield.Type,
-			targtype.Name(), tfield.Name, tfield.Type,
-		)
+		assert.failif(ofield.Anonymous != tfield.Anonymous,
+			details, "embedded field and non-embedded field")
+
+		fieldElem := elem.FieldByName(ofield.Name)
+		assert.failif(!fieldElem.IsValid(), details, "object field %q not found",
+			ofield.Name)
+
+		if !fieldElem.IsValid() {
+			continue
+		}
+
+		fieldTarg := targ.FieldByName(tfield.Name)
+		assert.failif(!fieldTarg.IsValid(), details, "target field %q not found",
+			tfield.Name)
 
 		// tfield.IsExported() was introduced only in go1.17
 		if tfield.PkgPath == "" {
 			assert.Partial(
-				elem.Interface(), target.Field(i).Interface(),
+				fieldElem.Interface(), fieldTarg.Interface(),
 				errctx(details, "comparing struct field %s and %s",
 					tfield.Name, ofield.Name))
 
