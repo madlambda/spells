@@ -65,7 +65,7 @@ func (assert *Assert) Partial(obj, target interface{}, details ...interface{}) {
 			errctx(details, "struct mismatch"))
 	case reflect.Slice:
 		assert.failif(targ.Len() > elem.Len(), details,
-			"target length is bigger than object")
+			"target length is bigger than object: %d > %d", targ.Len(), elem.Len())
 		for i := 0; i < targ.Len(); i++ {
 			assert.Partial(elem.Index(i).Interface(), targ.Index(i).Interface(),
 				errctx(details, "slice index %d mismatch", i))

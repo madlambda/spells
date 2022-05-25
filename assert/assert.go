@@ -49,6 +49,7 @@ func (assert *Assert) fail(context []interface{}, details ...interface{}) {
 }
 
 func (assert *Assert) failif(cond bool, context []interface{}, details ...interface{}) {
+	assert.t.Helper()
 	if cond {
 		assert.fail(context, details...)
 	}
