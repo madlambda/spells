@@ -24,14 +24,14 @@ func (assert *Assert) StringMatch(pattern string, str string, details ...interfa
 
 // StringContains asserts that string s contains the subst string and calls
 // the Fatal() function with details otherwise.
-func StringContains(t *testing.T, s, substr string, details ...interface{}) {
+func StringContains(t testing.TB, s, substr string, details ...interface{}) {
 	assert := New(t, Fatal)
 	assert.StringContains(s, substr, details...)
 }
 
 // StringMatch asserts that string matches the regex pattern and calls
 // the Fatal() function with details otherwise.
-func StringMatch(t *testing.T, pattern string, str string, details ...interface{}) {
+func StringMatch(t testing.TB, pattern string, str string, details ...interface{}) {
 	assert := New(t, Fatal)
 	assert.StringMatch(pattern, str, details...)
 }

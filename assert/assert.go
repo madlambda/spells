@@ -7,7 +7,7 @@ import (
 
 // Assert is a custom assert helper.
 type Assert struct {
-	t        *testing.T
+	t        testing.TB
 	details  []interface{}
 	failfunc FailureReport
 }
@@ -34,7 +34,7 @@ const detailSeparator = ": "
 //   ...
 // The code above fails with message below:
 //   wanted[test] but got[tesd].Name mismatch: comparing objects Value1 and Value2
-func New(t *testing.T, fail FailureReport, details ...interface{}) *Assert {
+func New(t testing.TB, fail FailureReport, details ...interface{}) *Assert {
 	return &Assert{
 		t:        t,
 		failfunc: fail,

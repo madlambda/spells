@@ -16,7 +16,7 @@ func (assert *Assert) NoError(err error, details ...interface{}) {
 
 // NoError will assert that given error is nil.
 // If it's nil then the Fatal() function is called with details.
-func NoError(t *testing.T, err error, details ...interface{}) {
+func NoError(t testing.TB, err error, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal)
 	assert.NoError(err, details...)
@@ -31,7 +31,7 @@ func (assert *Assert) Error(err error, details ...interface{}) {
 }
 
 // Error will call Fatal with the given details if the error is nil.
-func Error(t *testing.T, err error, details ...interface{}) {
+func Error(t testing.TB, err error, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal)
 	assert.Error(err, details...)
@@ -50,7 +50,7 @@ func (assert *Assert) IsError(got, want error, details ...interface{}) {
 // IsError will assert if the given error matches the want error.
 // It uses the errors.Is() function to check if the error wraps the wanted error.
 // It calls the Fatal() function if errors.Is() returns false.
-func IsError(t *testing.T, got, want error, details ...interface{}) {
+func IsError(t testing.TB, got, want error, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal)
 	assert.IsError(got, want, details...)
