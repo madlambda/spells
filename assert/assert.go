@@ -2,12 +2,13 @@ package assert
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
 // Assert is a custom assert helper.
 type Assert struct {
-	t        *testing.T
+	t        testing.TB
 	details  []interface{}
 	failfunc FailureReport
 }
@@ -34,7 +35,7 @@ const detailSeparator = ": "
 //   ...
 // The code above fails with message below:
 //   wanted[test] but got[tesd].Name mismatch: comparing objects Value1 and Value2
-func New(t *testing.T, fail FailureReport, details ...interface{}) *Assert {
+func New(t testing.TB, fail FailureReport, details ...interface{}) *Assert {
 	return &Assert{
 		t:        t,
 		failfunc: fail,
@@ -79,10 +80,14 @@ func errordetails(details ...interface{}) string {
 }
 
 func errctx(context []interface{}, details ...interface{}) string {
-	errstr := errordetails(details...)
-	if len(errstr) > 0 {
-		errstr += detailSeparator
+	msgs := []string{}
+	detailsMsg := errordetails(details...)
+	if detailsMsg != "" {
+		msgs = append(msgs, detailsMsg)
 	}
-	errstr += errordetails(context...)
-	return errstr
+	ctxMsg := errordetails(context...)
+	if ctxMsg != "" {
+		msgs = append(msgs, ctxMsg)
+	}
+	return strings.Join(msgs, detailSeparator)
 }

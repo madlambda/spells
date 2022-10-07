@@ -141,7 +141,7 @@ func (assert *Assert) partialStruct(obj interface{}, target interface{}, details
 	}
 }
 
-func Partial(t *testing.T, obj interface{}, target interface{}, details ...interface{}) {
+func Partial(t testing.TB, obj interface{}, target interface{}, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal, details...)
 	assert.Partial(obj, target)

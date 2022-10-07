@@ -31,7 +31,7 @@ func (assert *Assert) IsFalse(b bool, details ...interface{}) {
 
 // IsTrue asserts that b is true.
 // If it's not then Fatal() is called with details.
-func IsTrue(t *testing.T, cond bool, details ...interface{}) {
+func IsTrue(t testing.TB, cond bool, details ...interface{}) {
 	assert := New(t, Fatal)
 	assert.IsTrue(cond, details...)
 }
@@ -47,7 +47,7 @@ func (assert *Assert) EqualStrings(want string, got string, details ...interface
 
 // EqualStrings compares the two strings for equality.
 // If they are not equal then the Fatal() function is called with details.
-func EqualStrings(t *testing.T, want string, got string, details ...interface{}) {
+func EqualStrings(t testing.TB, want string, got string, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal)
 	assert.EqualStrings(want, got, details...)
@@ -64,7 +64,7 @@ func (assert *Assert) EqualInts(want int, got int, details ...interface{}) {
 
 // EqualInts compares the two ints for equality.
 // If they are not equal then the Fatal() function is called with details.
-func EqualInts(t *testing.T, want int, got int, details ...interface{}) {
+func EqualInts(t testing.TB, want int, got int, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal)
 	assert.EqualInts(want, got, details...)
@@ -90,7 +90,7 @@ func (assert *Assert) EqualFloats(want float64, got float64, details ...interfac
 
 // EqualFloats compares the two floats for equality.
 // If they are not equal then the Fatal() function is called with details.
-func EqualFloats(t *testing.T, want, got float64, details ...interface{}) {
+func EqualFloats(t testing.TB, want, got float64, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal)
 	assert.EqualFloats(want, got)
@@ -107,7 +107,7 @@ func (assert *Assert) EqualComplexes(want, got complex128, details ...interface{
 
 // EqualComplexes compares the two complex numbers for equality.
 // If they are not equal then the Fatal function is called with details.
-func EqualComplexes(t *testing.T, want, got complex128, details ...interface{}) {
+func EqualComplexes(t testing.TB, want, got complex128, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal)
 	assert.EqualComplexes(want, got, details...)
@@ -138,7 +138,7 @@ func (assert *Assert) EqualErrs(want error, got error, details ...interface{}) {
 // EqualErrs compares if two errors have the same error description (by calling .Error()).
 // If they are not equal then the Fatal() function is called with details.
 // Both errors can't be nil.
-func EqualErrs(t *testing.T, want, got error, details ...interface{}) {
+func EqualErrs(t testing.TB, want, got error, details ...interface{}) {
 	t.Helper()
 	assert := New(t, Fatal)
 	assert.EqualErrs(want, got, details...)
