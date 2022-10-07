@@ -354,3 +354,61 @@ func TestPartial(t *testing.T) {
 		})
 	}
 }
+
+func TestAssertErrMessages(t *testing.T) {
+	t.Run("error: no details", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := "expected error, got nil"
+			assert.EqualStrings(t, want, got)
+		})
+		a.Error(nil)
+	})
+
+	t.Run("error: constructor msg and details msg with fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := "expected error, got nil: func fmt 777: constructor fmt 666"
+			assert.EqualStrings(t, want, got)
+		}, "constructor fmt %d", 666)
+		a.Error(nil, "func fmt %d", 777)
+	})
+
+	t.Run("error: constructor msg and details msg no fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := "expected error, got nil: func msg: constructor msg"
+			assert.EqualStrings(t, want, got)
+		}, "constructor msg")
+		a.Error(nil, "func msg")
+	})
+
+	t.Run("error: constructor msg with fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := "expected error, got nil: constructor fmt 666"
+			assert.EqualStrings(t, want, got)
+		}, "constructor fmt %d", 666)
+		a.Error(nil)
+	})
+
+	t.Run("error: constructor msg no fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := "expected error, got nil: constructor msg"
+			assert.EqualStrings(t, want, got)
+		}, "constructor msg")
+		a.Error(nil)
+	})
+
+	t.Run("error: detail msg with fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := "expected error, got nil: func fmt 666"
+			assert.EqualStrings(t, want, got)
+		})
+		a.Error(nil, "func fmt %d", 666)
+	})
+
+	t.Run("error: detail msg no fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := "expected error, got nil: func msg"
+			assert.EqualStrings(t, want, got)
+		})
+		a.Error(nil, "func msg")
+	})
+}

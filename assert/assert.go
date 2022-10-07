@@ -2,6 +2,7 @@ package assert
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -79,10 +80,14 @@ func errordetails(details ...interface{}) string {
 }
 
 func errctx(context []interface{}, details ...interface{}) string {
-	errstr := errordetails(details...)
-	if len(errstr) > 0 {
-		errstr += detailSeparator
+	msgs := []string{}
+	detailsMsg := errordetails(details...)
+	if detailsMsg != "" {
+		msgs = append(msgs, detailsMsg)
 	}
-	errstr += errordetails(context...)
-	return errstr
+	ctxMsg := errordetails(context...)
+	if ctxMsg != "" {
+		msgs = append(msgs, ctxMsg)
+	}
+	return strings.Join(msgs, detailSeparator)
 }
