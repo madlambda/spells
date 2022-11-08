@@ -1,6 +1,8 @@
 package assert_test
 
 import (
+	"errors"
+	"fmt"
 	"math"
 	"testing"
 
@@ -410,5 +412,66 @@ func TestAssertErrMessages(t *testing.T) {
 			assert.EqualStrings(t, want, got)
 		})
 		a.Error(nil, "func msg")
+	})
+}
+
+func TestAssertNoErrMessages(t *testing.T) {
+	err := errors.New("test")
+	errmsg := fmt.Sprintf("unexpected error[%v]", err)
+
+	t.Run("no error: no details", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := errmsg
+			assert.EqualStrings(t, want, got)
+		})
+		a.NoError(err)
+	})
+
+	t.Run("no error: constructor msg and details msg with fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := fmt.Sprintf("%s: func fmt 777: constructor fmt 666", errmsg)
+			assert.EqualStrings(t, want, got)
+		}, "constructor fmt %d", 666)
+		a.NoError(err, "func fmt %d", 777)
+	})
+
+	t.Run("no error: constructor msg and details msg no fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := fmt.Sprintf("%s: func msg: constructor msg", errmsg)
+			assert.EqualStrings(t, want, got)
+		}, "constructor msg")
+		a.NoError(err, "func msg")
+	})
+
+	t.Run("no error: constructor msg with fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := fmt.Sprintf("%s: constructor fmt 666", errmsg)
+			assert.EqualStrings(t, want, got)
+		}, "constructor fmt %d", 666)
+		a.NoError(err)
+	})
+
+	t.Run("no error: constructor msg no fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := fmt.Sprintf("%s: constructor msg", errmsg)
+			assert.EqualStrings(t, want, got)
+		}, "constructor msg")
+		a.NoError(err)
+	})
+
+	t.Run("no error: detail msg with fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := fmt.Sprintf("%s: func fmt 666", errmsg)
+			assert.EqualStrings(t, want, got)
+		})
+		a.NoError(err, "func fmt %d", 666)
+	})
+
+	t.Run("no error: detail msg no fmt", func(t *testing.T) {
+		a := assert.New(t, func(a *assert.Assert, got string) {
+			want := fmt.Sprintf("%s: func msg", errmsg)
+			assert.EqualStrings(t, want, got)
+		})
+		a.NoError(err, "func msg")
 	})
 }
