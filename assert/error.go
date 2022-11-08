@@ -10,7 +10,7 @@ import (
 func (assert *Assert) NoError(err error, details ...interface{}) {
 	assert.t.Helper()
 	if err != nil {
-		assert.fail(details, "unexpected error[%s]%s", err)
+		assert.fail(details, "unexpected error[%s]", err)
 	}
 }
 
