@@ -467,7 +467,7 @@ func TestAssertNoErrMessages(t *testing.T) {
 		a.NoError(err, "func fmt %d", 666)
 	})
 
-	t.Run("error: detail msg no fmt", func(t *testing.T) {
+	t.Run("no error: detail msg no fmt", func(t *testing.T) {
 		a := assert.New(t, func(a *assert.Assert, got string) {
 			want := fmt.Sprintf("%s: func msg", errmsg)
 			assert.EqualStrings(t, want, got)
