@@ -9,3 +9,5 @@
 Small and (hopefully) useful set of Go functions.
 The idea is to extend what we can't find on Go's stdlib
 with the simplest approach possible.
+
+Moved to [codeberg.org](https://codeberg.org/madlambda/spells).
